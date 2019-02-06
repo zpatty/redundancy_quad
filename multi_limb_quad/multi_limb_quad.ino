@@ -497,13 +497,13 @@ void wave1b()
   SimbleeForMobile.updateColor(rl3ID, BLACK);
   SimbleeForMobile.updateColor(fr1ID, BLACK);
   delay(offTime);
-  if (wave1_b == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave1_b = 0;
-    }
-//  SimbleeForMobile.process();
+//  if (wave1_b == 1){
+//        currentTime = millis();
+//    if (abs(currentTime - startTime) >= abs(TIME)){
+//      count = 1;
+//      wave1_b = 0;
+//    }
+////  SimbleeForMobile.process();
 //  digitalWrite(rr2, HIGH);
 //  digitalWrite(fl3, HIGH);
 //  SimbleeForMobile.updateColor(rr2ID, RED);
@@ -569,7 +569,7 @@ void wave1b()
 //  SimbleeForMobile.updateColor(rl4ID, BLACK);
 //  SimbleeForMobile.updateColor(fr1ID, BLACK);
 //  delay(offTime + coolTime);
-//}
+}
 
 void wave1f() 
 {

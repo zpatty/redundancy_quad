@@ -33,13 +33,13 @@ void setup() {
 void loop() {
   while(go != "stop"){
   digitalWrite(2, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(250);                       // wait for a second
   Serial.write("POWER!");
   Serial.println();
+  delay(250); // wait for a minute
   digitalWrite(2, LOW);    // turn the LED off by making the voltage LOW
   Serial.write("LOW");
   Serial.println();
-  delay(2000); // wait for a minute
+  delay(4000); // wait for a minute
   if (Serial.available() > 0){
     go = Serial.readString();
     Serial.print(go);
