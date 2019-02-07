@@ -30,11 +30,11 @@ uint8_t Wave3; // 8-bit field in which to store switch Wave3 ID number
 uint8_t Warmup; // 8-bit field in which to store switch Warmup ID number  
 int fl1 = 31; // pin number for seg1
 int fl2 = 20; // pin number for seg2 
-int fl3 = 4; // pin number for seg3
+int fl3 = 32; // pin number for seg3
 int fl4 = 6; // pin number for seg4
-int fr1 = 3; // pin number for seg5
+int fr1 = 33; // pin number for seg5
 int fr2 = 5; // pin number for seg6
-int fr3 = 8; // pin number for seg1
+int fr3 = 34; // pin number for seg1
 int fr4 = 11; // pin number for seg2 
 int rr1 = 19; // pin number for seg3
 int rr2 = 17; // pin number for seg4
@@ -341,13 +341,13 @@ void ui() {
 //  FR2 = SimbleeForMobile.drawButton(r2buttonX, fbuttonY, buttonW, "2", BLACK);
   FR3 = SimbleeForMobile.drawButton(r3buttonX, fbuttonY, buttonW, "3", BLACK);
 //  FR4 = SimbleeForMobile.drawButton(r4buttonX, fbuttonY, buttonW, "4", BLACK);
-  RL1 = SimbleeForMobile.drawButton(l1buttonX, rbuttonY, buttonW, "1", BLACK);
+//  RL1 = SimbleeForMobile.drawButton(l1buttonX, rbuttonY, buttonW, "1", BLACK);
 //  RL2 = SimbleeForMobile.drawButton(l2buttonX, rbuttonY, buttonW, "2", BLACK);
-  RL3 = SimbleeForMobile.drawButton(l3buttonX, rbuttonY, buttonW, "3", BLACK);
+//  RL3 = SimbleeForMobile.drawButton(l3buttonX, rbuttonY, buttonW, "3", BLACK);
 //  RL4 = SimbleeForMobile.drawButton(l4buttonX, rbuttonY, buttonW, "4", BLACK);
-  RR1 = SimbleeForMobile.drawButton(r1buttonX, rbuttonY, buttonW, "1", BLACK);
+//  RR1 = SimbleeForMobile.drawButton(r1buttonX, rbuttonY, buttonW, "1", BLACK);
 //  RR2 = SimbleeForMobile.drawButton(r2buttonX, rbuttonY, buttonW, "2", BLACK);
-  RR3 = SimbleeForMobile.drawButton(r3buttonX, rbuttonY, buttonW, "3", BLACK);
+//  RR3 = SimbleeForMobile.drawButton(r3buttonX, rbuttonY, buttonW, "3", BLACK);
 //  RR4 = SimbleeForMobile.drawButton(r4buttonX, rbuttonY, buttonW, "4", BLACK);
 //  Wave2_b = SimbleeForMobile.drawSwitch(waveSwitchX1,wave2bSwitchY,waveSwitchColor);
 //  Wave2_f = SimbleeForMobile.drawSwitch(waveSwitchX1,wave2fSwitchY,waveSwitchColor);
@@ -369,13 +369,13 @@ void ui() {
 //  fr2ID = SimbleeForMobile.drawRect(r2IDX, fIDY, limbIDL, limbIDW, limbIndColor);
   fr3ID = SimbleeForMobile.drawRect(r3IDX, fIDY, limbIDL, limbIDW, limbIndColor);
 //  fr4ID = SimbleeForMobile.drawRect(r4IDX, fIDY, limbIDL, limbIDW, limbIndColor);
-  rr1ID = SimbleeForMobile.drawRect(r1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+//  rr1ID = SimbleeForMobile.drawRect(r1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
 //  rr2ID = SimbleeForMobile.drawRect(r2IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-  rr3ID = SimbleeForMobile.drawRect(r3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+//  rr3ID = SimbleeForMobile.drawRect(r3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
 //  rr4ID = SimbleeForMobile.drawRect(r4IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-  rl1ID = SimbleeForMobile.drawRect(l1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+//  rl1ID = SimbleeForMobile.drawRect(l1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
 //  rl2ID = SimbleeForMobile.drawRect(l2IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-  rl3ID = SimbleeForMobile.drawRect(l3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+//  rl3ID = SimbleeForMobile.drawRect(l3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
 //  rl4ID = SimbleeForMobile.drawRect(l4IDX, rIDY, limbIDL, limbIDW, limbIndColor);
   SimbleeForMobile.endScreen();
   update;
