@@ -1,6 +1,245 @@
 #include <SimbleeForMobile.h>
 //#include "thermometer_png.h"
 //#include "CAT.h"
+
+/* MPU9250 
+ by: Kris Winer (should probably credit him for like 99.999% of the code)
+ license: Beerware - Use this code however you'd like. If you 
+ find it useful you can buy me a beer some time. (from Kris Winer)
+  */
+#include <SPI.h>
+#include <Wire.h> 
+#define AK8963_ADDRESS   0x0C
+
+#define WHO_AM_I_AK8963  0x00 // should return 0x48
+#define INFO             0x01
+#define AK8963_ST1       0x02  // data ready status bit 0
+#define AK8963_XOUT_L   0x03  // data
+#define AK8963_XOUT_H  0x04
+#define AK8963_YOUT_L  0x05
+#define AK8963_YOUT_H  0x06
+#define AK8963_ZOUT_L  0x07
+#define AK8963_ZOUT_H  0x08
+#define AK8963_ST2       0x09  // Data overflow bit 3 and data read error status bit 2
+#define AK8963_CNTL      0x0A  // Power down (0000), single-measurement (0001), self-test (1000) and Fuse ROM (1111) modes on bits 3:0
+#define AK8963_ASTC      0x0C  // Self test control
+#define AK8963_I2CDIS    0x0F  // I2C disable
+#define AK8963_ASAX      0x10  // Fuse ROM x-axis sensitivity adjustment value
+#define AK8963_ASAY      0x11  // Fuse ROM y-axis sensitivity adjustment value
+#define AK8963_ASAZ      0x12  // Fuse ROM z-axis sensitivity adjustment value
+
+#define SELF_TEST_X_GYRO 0x00                  
+#define SELF_TEST_Y_GYRO 0x01                                                                           
+#define SELF_TEST_Z_GYRO 0x02
+
+#define SELF_TEST_X_ACCEL 0x0D
+#define SELF_TEST_Y_ACCEL 0x0E    
+#define SELF_TEST_Z_ACCEL 0x0F
+
+#define SELF_TEST_A      0x10
+
+#define XG_OFFSET_H      0x13  // User-defined trim values for gyroscope
+#define XG_OFFSET_L      0x14
+#define YG_OFFSET_H      0x15
+#define YG_OFFSET_L      0x16
+#define ZG_OFFSET_H      0x17
+#define ZG_OFFSET_L      0x18
+#define SMPLRT_DIV       0x19
+#define CONFIG           0x1A
+#define GYRO_CONFIG      0x1B
+#define ACCEL_CONFIG     0x1C
+#define ACCEL_CONFIG2    0x1D
+#define LP_ACCEL_ODR     0x1E   
+#define WOM_THR          0x1F   
+
+#define MOT_DUR          0x20  // Duration counter threshold for motion interrupt generation, 1 kHz rate, LSB = 1 ms
+#define ZMOT_THR         0x21  // Zero-motion detection threshold bits [7:0]
+#define ZRMOT_DUR        0x22  // Duration counter threshold for zero motion interrupt generation, 16 Hz rate, LSB = 64 ms
+
+#define FIFO_EN          0x23
+#define I2C_MST_CTRL     0x24   
+#define I2C_SLV0_ADDR    0x25
+#define I2C_SLV0_REG     0x26
+#define I2C_SLV0_CTRL    0x27
+#define I2C_SLV1_ADDR    0x28
+#define I2C_SLV1_REG     0x29
+#define I2C_SLV1_CTRL    0x2A
+#define I2C_SLV2_ADDR    0x2B
+#define I2C_SLV2_REG     0x2C
+#define I2C_SLV2_CTRL    0x2D
+#define I2C_SLV3_ADDR    0x2E
+#define I2C_SLV3_REG     0x2F
+#define I2C_SLV3_CTRL    0x30
+#define I2C_SLV4_ADDR    0x31
+#define I2C_SLV4_REG     0x32
+#define I2C_SLV4_DO      0x33
+#define I2C_SLV4_CTRL    0x34
+#define I2C_SLV4_DI      0x35
+#define I2C_MST_STATUS   0x36
+#define INT_PIN_CFG      0x37
+#define INT_ENABLE       0x38
+#define DMP_INT_STATUS   0x39  // Check DMP interrupt
+#define INT_STATUS       0x3A
+#define ACCEL_XOUT_H     0x3B
+#define ACCEL_XOUT_L     0x3C
+#define ACCEL_YOUT_H     0x3D
+#define ACCEL_YOUT_L     0x3E
+#define ACCEL_ZOUT_H     0x3F
+#define ACCEL_ZOUT_L     0x40
+#define TEMP_OUT_H       0x41
+#define TEMP_OUT_L       0x42
+#define GYRO_XOUT_H      0x43
+#define GYRO_XOUT_L      0x44
+#define GYRO_YOUT_H      0x45
+#define GYRO_YOUT_L      0x46
+#define GYRO_ZOUT_H      0x47
+#define GYRO_ZOUT_L      0x48
+#define EXT_SENS_DATA_00 0x49
+#define EXT_SENS_DATA_01 0x4A
+#define EXT_SENS_DATA_02 0x4B
+#define EXT_SENS_DATA_03 0x4C
+#define EXT_SENS_DATA_04 0x4D
+#define EXT_SENS_DATA_05 0x4E
+#define EXT_SENS_DATA_06 0x4F
+#define EXT_SENS_DATA_07 0x50
+#define EXT_SENS_DATA_08 0x51
+#define EXT_SENS_DATA_09 0x52
+#define EXT_SENS_DATA_10 0x53
+#define EXT_SENS_DATA_11 0x54
+#define EXT_SENS_DATA_12 0x55
+#define EXT_SENS_DATA_13 0x56
+#define EXT_SENS_DATA_14 0x57
+#define EXT_SENS_DATA_15 0x58
+#define EXT_SENS_DATA_16 0x59
+#define EXT_SENS_DATA_17 0x5A
+#define EXT_SENS_DATA_18 0x5B
+#define EXT_SENS_DATA_19 0x5C
+#define EXT_SENS_DATA_20 0x5D
+#define EXT_SENS_DATA_21 0x5E
+#define EXT_SENS_DATA_22 0x5F
+#define EXT_SENS_DATA_23 0x60
+#define MOT_DETECT_STATUS 0x61
+#define I2C_SLV0_DO      0x63
+#define I2C_SLV1_DO      0x64
+#define I2C_SLV2_DO      0x65
+#define I2C_SLV3_DO      0x66
+#define I2C_MST_DELAY_CTRL 0x67
+#define SIGNAL_PATH_RESET  0x68
+#define MOT_DETECT_CTRL  0x69
+#define USER_CTRL        0x6A  // Bit 7 enable DMP, bit 3 reset DMP
+#define PWR_MGMT_1       0x6B // Device defaults to the SLEEP mode
+#define PWR_MGMT_2       0x6C
+#define DMP_BANK         0x6D  // Activates a specific bank in the DMP
+#define DMP_RW_PNT       0x6E  // Set read/write pointer to a specific start address in specified DMP bank
+#define DMP_REG          0x6F  // Register in DMP from which to read or to which to write
+#define DMP_REG_1        0x70
+#define DMP_REG_2        0x71 
+#define FIFO_COUNTH      0x72
+#define FIFO_COUNTL      0x73
+#define FIFO_R_W         0x74
+#define WHO_AM_I_MPU9250 0x75  // Should return 0x71
+#define XA_OFFSET_H      0x77
+#define XA_OFFSET_L      0x78
+#define YA_OFFSET_H      0x7A
+#define YA_OFFSET_L      0x7B
+#define ZA_OFFSET_H      0x7D
+#define ZA_OFFSET_L      0x7E
+
+// Using the MSENSR-9250 breakout board, ADO is set to 0 
+// Seven-bit device address is 110100 for ADO = 0 and 110101 for ADO = 1
+#define ADO 0
+#if ADO
+#define MPU9250_ADDRESS 0x68  // Device address when ADO = 1
+#else
+#define MPU9250_ADDRESS 0x68  // Device address when ADO = 0
+#define AK8963_ADDRESS 0x0C   //  Address of magnetometer
+#endif  
+
+#define AHRS true         // set to false for basic data read
+#define SerialDebug false   // set to true to get Serial output for debugging
+
+// Set initial input parameters
+enum Ascale {
+  AFS_2G = 0,
+  AFS_4G,
+  AFS_8G,
+  AFS_16G
+};
+
+enum Gscale {
+  GFS_250DPS = 0,
+  GFS_500DPS,
+  GFS_1000DPS,
+  GFS_2000DPS
+};
+
+enum Mscale {
+  MFS_14BITS = 0, // 0.6 mG per LSB
+  MFS_16BITS      // 0.15 mG per LSB
+};
+
+// Specify sensor full scale
+uint8_t Gscale = GFS_250DPS;
+uint8_t Ascale = AFS_2G;
+uint8_t Mscale = MFS_16BITS; // Choose either 14-bit or 16-bit magnetometer resolution
+uint8_t Mmode = 0x02;        // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
+float aRes, gRes, mRes;      // scale resolutions per LSB for the sensors
+
+#define AHRS false         // Set to false for basic data read
+#define SerialDebug true  // Set to true to get Serial output for debugging
+
+// Pin definitions
+int intPin = 11;  // These can be changed, 2 and 3 are the Arduinos ext int pins
+int SCLpin = 16;
+int SDApin = 17;
+
+int16_t accelCount[3];  // Stores the 16-bit signed accelerometer sensor output
+int16_t gyroCount[3];   // Stores the 16-bit signed gyro sensor output
+int16_t magCount[3];    // Stores the 16-bit signed magnetometer sensor output
+float magCalibration[3] = {0, 0, 0}, magbias[3] = {0, 0, 0};  // Factory mag calibration and mag bias
+float gyroBias[3] = {0, 0, 0}, accelBias[3] = {0, 0, 0};      // Bias corrections for gyro and accelerometer
+int16_t tempCount;      // temperature raw count output
+float   temperature;    // Stores the real internal chip temperature in degrees Celsius
+float   SelfTest[6];    // holds results of gyro and accelerometer self test
+
+// global constants for 9 DoF fusion and AHRS (Attitude and Heading Reference System)
+float GyroMeasError = PI * (40.0f / 180.0f);   // gyroscope measurement error in rads/s (start at 40 deg/s)
+float GyroMeasDrift = PI * (0.0f  / 180.0f);   // gyroscope measurement drift in rad/s/s (start at 0.0 deg/s/s)
+
+float beta = sqrt(3.0f / 4.0f) * GyroMeasError;   // compute beta
+float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;   // compute zeta, the other free parameter in the Madgwick scheme usually set to a small or zero value
+#define Kp 2.0f * 5.0f // these are the free parameters in the Mahony filter and fusion scheme, Kp for proportional feedback, Ki for integral
+#define Ki 0.0f
+
+uint32_t delt_t = 0; // used to control display output rate
+uint32_t count = 0, sumCount = 0; // used to control display output rate
+float pitch, yaw, roll;
+float deltat = 0.0f;// sum = 0.0f;        // integration interval for both filter schemes
+uint32_t lastUpdate = 0, firstUpdate = 0; // used to calculate integration interval
+uint32_t Now = 0;        // used to calculate integration interval
+
+float ax, ay, az, gx, gy, gz, mx, my, mz; // variables to hold latest sensor data values 
+float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};    // vector to hold quaternion
+float eInt[3] = {0.0f, 0.0f, 0.0f};       // vector to hold integral error for Mahony method
+
+float magBias[3],magScale[3];
+
+int tmp102Address = 0x48;
+
+int sampleNumber = 500;
+String inputString = "";         // a String to hold incoming data
+
+int NUM_SAMPLES = 50;
+const uint8_t nSamples = 50;
+uint8_t range = 0;
+uint32_t sum = 0;
+uint32_t average = 0;
+uint8_t status;
+
+float data[9];
+
+// Robot
+
 uint8_t Switch; // 8-bit field in which to store switch start ID number
 uint8_t Wave1_b; // 8-bit field in which to store switch Wave1_b ID number
 uint8_t FL1; // 8-bit field in which to store button FL1 ID number
@@ -28,13 +267,13 @@ uint8_t Wave2_sf; // 8-bit field in which to store switch Wave2_sf ID number
 uint8_t Wave2_sb; // 8-bit field in which to store switch Wave2_sb ID number
 uint8_t Wave3; // 8-bit field in which to store switch Wave3 ID number
 uint8_t Warmup; // 8-bit field in which to store switch Warmup ID number  
-int fl1 = 30; // pin number for seg1
+int fl1 = 23; // pin number for seg1
 int fl2 = 20; // pin number for seg2 
-int fl3 = 29; // pin number for seg3
+int fl3 = 4; // pin number for seg3
 int fl4 = 6; // pin number for seg4
-int fr1 = 28; // pin number for seg5
+int fr1 = 3; // pin number for seg5
 int fr2 = 5; // pin number for seg6
-int fr3 = 25; // pin number for seg1
+int fr3 = 8; // pin number for seg1
 int fr4 = 11; // pin number for seg2 
 int rr1 = 19; // pin number for seg3
 int rr2 = 17; // pin number for seg4
@@ -93,7 +332,7 @@ int rl1ID; //indicator of rear left limb 1
 int rl2ID; //indicator of rear left limb 2
 int rl3ID; //indicator of rear left limb 3
 int rl4ID; //indicator of rear left limb 4
-int count = 1;
+int rcount = 1;
 unsigned long startTime;
 unsigned long currentTime;
 
@@ -214,7 +453,6 @@ void rr4event();
 void off();
 
 void setup() {
-  Serial.begin(9600);
   pinMode(fl1, OUTPUT);
   pinMode(fl2, OUTPUT);
   pinMode(fl3, OUTPUT);
@@ -235,13 +473,51 @@ void setup() {
   SimbleeForMobile.domain = "Simblee.com";
   SimbleeForMobile.deviceName = "SEAQ 2";
   SimbleeForMobile.begin();
+
+  Wire.beginOnPins(SCLpin,SDApin);
+  // TWBR = 12;  // 400 kbit/sec I2C speed
+  Serial.begin(9600);
+
+  while(!Serial){};
+
+  // Set up the interrupt pin, its set as active high, push-pull
+  pinMode(intPin, INPUT);
+  digitalWrite(intPin, LOW);
+  
+
+  // IMU setup
+  byte c = readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);  // Read WHO_AM_I register for MPU-9250
+  Serial.println(c, HEX);
+  delay(100);
+  if (c == 0x71) // WHO_AM_I should always be 0x68
+  {  
+    MPU9250SelfTest(SelfTest); // Start by performing self test and reporting values
+    calibrateMPU9250(gyroBias, accelBias); // Calibrate gyro and accelerometers, load biases in bias registers
+    delay(1000); 
+    
+    initMPU9250(); // Initialize device for active mode read of acclerometer, gyroscope, and temperature
+  
+    // Read the WHO_AM_I register of the magnetometer, this is a good test of communication
+    byte d = readByte(AK8963_ADDRESS, WHO_AM_I_AK8963);  // Read WHO_AM_I register for AK8963
+    delay(1000); 
+  
+    // Get magnetometer calibration from AK8963 ROM
+    initAK8963(magCalibration); 
+    getMres();
+    delay(1000);  
+  }
+  else
+  {
+    Serial.print("Could not connect to MPU9250: 0x");
+    Serial.println(c, HEX);
+  }
 }
 void loop() {
+  getOrientation();
   if(needsUpdate){
     update;
     needsUpdate = false;
   }
-  
   if (start == 0){
       off();
   }
@@ -309,23 +585,12 @@ uint32_t offtime;
 uint32_t cooltime;
 unsigned long runtime;
 void ui() { 
- // #define IMAGE1 2 // image number
-//  SimbleeForMobile.imageSource(IMAGE1, JPG, CAT_jpg, CAT_jpg_len);
-//  int catImage_ID = SimbleeForMobile.drawImage(IMAGE1, imageX, imageY);
   SimbleeForMobile.beginScreen(screenColor,PORTRAIT); 
   SimbleeForMobile.drawText(statusX, statusY, "Status", statusColor, statusFont);
   SimbleeForMobile.drawText(startX, startY, "Start", startColor, startFont);
   SimbleeForMobile.drawText(modeX, modeY, "Mode", modeColor, modeFont);
   SimbleeForMobile.drawText(waveX1, wave1bY, "Sim R Diagonal", waveColor, waveFont);
   SimbleeForMobile.drawText(waveX2, wave1bY, "Sim L Diagonal", waveColor, waveFont);
-//  SimbleeForMobile.drawText(waveX1, wave2bY, "Wave 2b", waveColor, waveFont);
-//  SimbleeForMobile.drawText(waveX1, wave2fY, "Wave 2f", waveColor, waveFont);
-//  SimbleeForMobile.drawText(waveX2, wave3bY, "Wave 3b", waveColor, waveFont);
-//  SimbleeForMobile.drawText(waveX2, wave3fY, "Wave 3f", waveColor, waveFont);
-//  SimbleeForMobile.drawText(waveX2, wave2sfY, "Wave 2sf", waveColor, waveFont);
-//  SimbleeForMobile.drawText(waveX2, wave2sbY, "Wave 2sb", waveColor, waveFont);
-//  SimbleeForMobile.drawText(waveX1, wave3Y, "Wave 3", waveColor, waveFont);
-//  SimbleeForMobile.drawText(waveX2, warmupY, "Warm Up", waveColor, waveFont);
   SimbleeForMobile.drawText(setupX, setupY, "Setup", setupColor, setupFont);
   SimbleeForMobile.drawText(onTimeX, onTimeY, "ON Time", onTimeColor, onTimeFont);
   SimbleeForMobile.drawText(offTimeX, offTimeY, "OFF Time", offTimeColor, offTimeFont);
@@ -335,49 +600,25 @@ void ui() {
   Wave1_b = SimbleeForMobile.drawSwitch(waveSwitchX1,wave1bSwitchY,waveSwitchColor); 
   Wave1_f = SimbleeForMobile.drawSwitch(waveSwitchX2,wave1bSwitchY,waveSwitchColor);
   FL1 = SimbleeForMobile.drawButton(l1buttonX, fbuttonY, buttonW, "1", BLACK);
-//  FL2 = SimbleeForMobile.drawButton(l2buttonX, fbuttonY, buttonW, "2", BLACK);
   FL3 = SimbleeForMobile.drawButton(l3buttonX, fbuttonY, buttonW, "3", BLACK);
-//  FL4 = SimbleeForMobile.drawButton(l4buttonX, fbuttonY, buttonW, "4", BLACK);
   FR1 = SimbleeForMobile.drawButton(r1buttonX, fbuttonY, buttonW, "1", BLACK);
-//  FR2 = SimbleeForMobile.drawButton(r2buttonX, fbuttonY, buttonW, "2", BLACK);
   FR3 = SimbleeForMobile.drawButton(r3buttonX, fbuttonY, buttonW, "3", BLACK);
-//  FR4 = SimbleeForMobile.drawButton(r4buttonX, fbuttonY, buttonW, "4", BLACK);
-//  RL1 = SimbleeForMobile.drawButton(l1buttonX, rbuttonY, buttonW, "1", BLACK);
-//  RL2 = SimbleeForMobile.drawButton(l2buttonX, rbuttonY, buttonW, "2", BLACK);
-//  RL3 = SimbleeForMobile.drawButton(l3buttonX, rbuttonY, buttonW, "3", BLACK);
-//  RL4 = SimbleeForMobile.drawButton(l4buttonX, rbuttonY, buttonW, "4", BLACK);
-//  RR1 = SimbleeForMobile.drawButton(r1buttonX, rbuttonY, buttonW, "1", BLACK);
-//  RR2 = SimbleeForMobile.drawButton(r2buttonX, rbuttonY, buttonW, "2", BLACK);
-//  RR3 = SimbleeForMobile.drawButton(r3buttonX, rbuttonY, buttonW, "3", BLACK);
-//  RR4 = SimbleeForMobile.drawButton(r4buttonX, rbuttonY, buttonW, "4", BLACK);
-//  Wave2_b = SimbleeForMobile.drawSwitch(waveSwitchX1,wave2bSwitchY,waveSwitchColor);
-//  Wave2_f = SimbleeForMobile.drawSwitch(waveSwitchX1,wave2fSwitchY,waveSwitchColor);
-//  Wave3_b = SimbleeForMobile.drawSwitch(waveSwitchX2,wave3bSwitchY,waveSwitchColor);
-//  Wave3_f = SimbleeForMobile.drawSwitch(waveSwitchX2,wave3fSwitchY,waveSwitchColor); 
-//  Wave2_sf = SimbleeForMobile.drawSwitch(waveSwitchX2,wave2sfSwitchY,waveSwitchColor);
-//  Wave2_sb = SimbleeForMobile.drawSwitch(waveSwitchX2,wave2sbSwitchY,waveSwitchColor);
-//  Wave3 = SimbleeForMobile.drawSwitch(waveSwitchX1,wave3SwitchY,waveSwitchColor);     
-//  Warmup = SimbleeForMobile.drawSwitch(waveSwitchX2,warmupSwitchY,waveSwitchColor);     
+  RL1 = SimbleeForMobile.drawButton(l1buttonX, rbuttonY, buttonW, "1", BLACK);
+  RL3 = SimbleeForMobile.drawButton(l3buttonX, rbuttonY, buttonW, "3", BLACK);
+  RR1 = SimbleeForMobile.drawButton(r1buttonX, rbuttonY, buttonW, "1", BLACK);
+  RR3 = SimbleeForMobile.drawButton(r3buttonX, rbuttonY, buttonW, "3", BLACK);
   ontime = SimbleeForMobile.drawTextField(onTimeTextX, onTimeTextY, timeTextWidth, onTime, "", textColor, textFieldColor);
   offtime = SimbleeForMobile.drawTextField(offTimeTextX, offTimeTextY, timeTextWidth, offTime, "", textColor, textFieldColor);
   cooltime = SimbleeForMobile.drawTextField(coolTimeTextX, coolTimeTextY, timeTextWidth, coolTime, "", textColor, textFieldColor);
   runtime = SimbleeForMobile.drawTextField(TIMETextX, TIMETextY, timeTextWidth, TIME, "", textColor, textFieldColor);
   fl1ID = SimbleeForMobile.drawRect(l1IDX, fIDY, limbIDL, limbIDW, limbIndColor);
-//  fl2ID = SimbleeForMobile.drawRect(l2IDX, fIDY, limbIDL, limbIDW, limbIndColor);
   fl3ID = SimbleeForMobile.drawRect(l3IDX, fIDY, limbIDL, limbIDW, limbIndColor);
-//  fl4ID = SimbleeForMobile.drawRect(l4IDX, fIDY, limbIDL, limbIDW, limbIndColor);
   fr1ID = SimbleeForMobile.drawRect(r1IDX, fIDY, limbIDL, limbIDW, limbIndColor);
-//  fr2ID = SimbleeForMobile.drawRect(r2IDX, fIDY, limbIDL, limbIDW, limbIndColor);
   fr3ID = SimbleeForMobile.drawRect(r3IDX, fIDY, limbIDL, limbIDW, limbIndColor);
-//  fr4ID = SimbleeForMobile.drawRect(r4IDX, fIDY, limbIDL, limbIDW, limbIndColor);
-//  rr1ID = SimbleeForMobile.drawRect(r1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-//  rr2ID = SimbleeForMobile.drawRect(r2IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-//  rr3ID = SimbleeForMobile.drawRect(r3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-//  rr4ID = SimbleeForMobile.drawRect(r4IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-//  rl1ID = SimbleeForMobile.drawRect(l1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-//  rl2ID = SimbleeForMobile.drawRect(l2IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-//  rl3ID = SimbleeForMobile.drawRect(l3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
-//  rl4ID = SimbleeForMobile.drawRect(l4IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+  rr1ID = SimbleeForMobile.drawRect(r1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+  rr3ID = SimbleeForMobile.drawRect(r3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+  rl1ID = SimbleeForMobile.drawRect(l1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+  rl3ID = SimbleeForMobile.drawRect(l3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
   SimbleeForMobile.endScreen();
   update;
 }
@@ -409,66 +650,179 @@ void off()
 void wave1b() 
 {
   if (wave1_b == 1){
-    if(count == 1){
+    if(rcount == 1){
       startTime = millis();
-      count = 2;
+      rcount = 2;
     }
     currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_b = 0;
     }
   SimbleeForMobile.process();  
+//  digitalWrite(rr4, HIGH);
   digitalWrite(fl1, HIGH);
+  digitalWrite(rr1, LOW);
+  digitalWrite(rr2, LOW);
+  digitalWrite(rr3, HIGH);
+  digitalWrite(fl2, LOW);
+  digitalWrite(fl3, LOW);
+  digitalWrite(fl4, LOW);
+  digitalWrite(fr1, LOW);
+  digitalWrite(fr2, LOW);
+  digitalWrite(fr3, LOW);
+  digitalWrite(fr4, LOW);
+  digitalWrite(rl1, LOW);
+  digitalWrite(rl2, LOW);
+  digitalWrite(rl3, LOW);
+  digitalWrite(rl4, LOW);
+  SimbleeForMobile.updateColor(rr3ID, RED);
   SimbleeForMobile.updateColor(fl1ID, RED);
   delay(onTime);
   }
-  digitalWrite(fl3, HIGH);
+  digitalWrite(rr3, LOW);
   digitalWrite(fl1, LOW);
-  SimbleeForMobile.updateColor(fl3ID, RED);
+  SimbleeForMobile.updateColor(rr3ID, BLACK);
   SimbleeForMobile.updateColor(fl1ID, BLACK);
-  delay(onTime);
-  digitalWrite(fl3, LOW);
-  SimbleeForMobile.updateColor(fl3ID, BLACK);
   delay(offTime);
   if (wave1_b == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_b = 0;
     }
   SimbleeForMobile.process();  
-  digitalWrite(fr1, HIGH);
-  SimbleeForMobile.updateColor(fr1ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(fr1, LOW);
+  digitalWrite(rl1, HIGH);
   digitalWrite(fr3, HIGH);
-  SimbleeForMobile.updateColor(fr1ID, BLACK);
+  SimbleeForMobile.updateColor(rl1ID, RED);
   SimbleeForMobile.updateColor(fr3ID, RED);
   delay(onTime);
+  }
+  digitalWrite(rl1, LOW);
   digitalWrite(fr3, LOW);
+  SimbleeForMobile.updateColor(rl1ID, BLACK);
   SimbleeForMobile.updateColor(fr3ID, BLACK);
   delay(offTime);
   if (wave1_b == 1){   
     currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_b = 0;
     }
-}
+  SimbleeForMobile.process();  
+  digitalWrite(rr1, HIGH);
+  digitalWrite(fl3, HIGH);
+  SimbleeForMobile.updateColor(rr1ID, RED);
+  SimbleeForMobile.updateColor(fl3ID, RED);
+  delay(onTime);
+  }
+  digitalWrite(rr1, LOW);
+  digitalWrite(fl3, LOW);
+  SimbleeForMobile.updateColor(rr1ID, BLACK);
+  SimbleeForMobile.updateColor(fl3ID, BLACK);
+  delay(offTime);
+  if (wave1_b == 1){
+        currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)){
+      rcount = 1;
+      wave1_b = 0;
+    }
+  SimbleeForMobile.process();  
+  digitalWrite(rl3, HIGH);
+  digitalWrite(fr1, HIGH);
+  SimbleeForMobile.updateColor(rl3ID, RED);
+  SimbleeForMobile.updateColor(fr1ID, RED);
+  delay(onTime);
+  }
+  digitalWrite(rl3, LOW);
+  digitalWrite(fr1, LOW);
+  SimbleeForMobile.updateColor(rl3ID, BLACK);
+  SimbleeForMobile.updateColor(fr1ID, BLACK);
+  delay(offTime);
+//  if (wave1_b == 1){
+//        currentTime = millis();
+//    if (abs(currentTime - startTime) >= abs(TIME)){
+//      count = 1;
+//      wave1_b = 0;
+//    }
+////  SimbleeForMobile.process();
+//  digitalWrite(rr2, HIGH);
+//  digitalWrite(fl3, HIGH);
+//  SimbleeForMobile.updateColor(rr2ID, RED);
+//  SimbleeForMobile.updateColor(fl3ID, RED);
+//  delay(onTime);
+//  }
+//  digitalWrite(rr2, LOW);
+//  digitalWrite(fl3, LOW);
+//  SimbleeForMobile.updateColor(rr2ID, BLACK);
+//  SimbleeForMobile.updateColor(fl3ID, BLACK);
+//  delay(offTime);
+//  if (wave1_b == 1){
+//        currentTime = millis();
+//    if (abs(currentTime - startTime) >= abs(TIME)){
+//      count = 1;
+//      wave1_b = 0;
+//    }
+//  SimbleeForMobile.process();
+//  digitalWrite(rl3, HIGH);
+//  digitalWrite(fr2, HIGH);
+//  SimbleeForMobile.updateColor(rl3ID, RED);
+//  SimbleeForMobile.updateColor(fr2ID, RED);
+//  delay(onTime);
+//  }
+//  digitalWrite(rl3, LOW);
+//  digitalWrite(fr2, LOW);
+//  SimbleeForMobile.updateColor(rl3ID, BLACK);
+//  SimbleeForMobile.updateColor(fr2ID, BLACK);
+//  delay(offTime);
+//    if (wave1_b == 1){
+//        currentTime = millis();
+//    if (abs(currentTime - startTime) >= abs(TIME)){
+//      count = 1;
+//      wave1_b = 0;
+//    }
+//  SimbleeForMobile.process();
+//  digitalWrite(rr1, HIGH);
+//  digitalWrite(fl4, HIGH);
+//  SimbleeForMobile.updateColor(rr1ID, RED);
+//  SimbleeForMobile.updateColor(fl4ID, RED);
+//  delay(onTime);
+//  }
+//  digitalWrite(rr1, LOW);
+//  digitalWrite(fl4, LOW);
+//  SimbleeForMobile.updateColor(rr1ID, BLACK);
+//  SimbleeForMobile.updateColor(fl4ID, BLACK);
+//  delay(offTime);
+//      if (wave1_b == 1){
+//        currentTime = millis();
+//    if (abs(currentTime - startTime) >= abs(TIME)){
+//      count = 1;
+//      wave1_b = 0;
+//    }
+//  SimbleeForMobile.process();
+//  digitalWrite(rl4, HIGH);
+//  digitalWrite(fr1, HIGH);
+//  SimbleeForMobile.updateColor(rl4ID, RED);
+//  SimbleeForMobile.updateColor(fr1ID, RED);
+//  delay(onTime);
+//  }
+//  digitalWrite(rl4, LOW);
+//  digitalWrite(fr1, LOW);
+//  SimbleeForMobile.updateColor(rl4ID, BLACK);
+//  SimbleeForMobile.updateColor(fr1ID, BLACK);
+//  delay(offTime + coolTime);
 }
 
 void wave1f() 
 {
   if (wave1_f == 1){
-    if(count == 1){
+    if(rcount == 1){
       startTime = millis();
-      count = 2;
+      rcount = 2;
     }
     currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_f = 0;
     }
   SimbleeForMobile.process();  
@@ -480,7 +834,7 @@ void wave1f()
   digitalWrite(fr2, LOW);
   digitalWrite(fr3, LOW);
   digitalWrite(fr4, HIGH);
-  digitalWrite(rl1, LOW);
+  digitalWrite(rl1, HIGH);
   digitalWrite(rl2, LOW);
   digitalWrite(rl3, LOW);
   digitalWrite(rl4, LOW);
@@ -492,7 +846,7 @@ void wave1f()
   SimbleeForMobile.updateColor(fr4ID, RED);
   delay(onTime);
   }
-  digitalWrite(rl1, HIGH);
+  digitalWrite(rl1, LOW);
   digitalWrite(fr4, LOW);
   SimbleeForMobile.updateColor(rl1ID, BLACK);
   SimbleeForMobile.updateColor(fr4ID, BLACK);
@@ -500,7 +854,7 @@ void wave1f()
   if (wave1_f == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_f = 0;
     }
   SimbleeForMobile.process();  
@@ -518,7 +872,7 @@ void wave1f()
   if (wave1_f == 1){   
     currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_f = 0;
     }
   SimbleeForMobile.process();  
@@ -536,7 +890,7 @@ void wave1f()
   if (wave1_f == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_f = 0;
     }
   SimbleeForMobile.process();  
@@ -554,7 +908,7 @@ void wave1f()
   if (wave1_f == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_f = 0;
     }
   SimbleeForMobile.process();
@@ -572,7 +926,7 @@ void wave1f()
   if (wave1_f == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_f = 0;
     }
   SimbleeForMobile.process();
@@ -590,7 +944,7 @@ void wave1f()
     if (wave1_f == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_f = 0;
     }
   SimbleeForMobile.process();
@@ -608,7 +962,7 @@ void wave1f()
       if (wave1_f == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
+      rcount = 1;
       wave1_f = 0;
     }
   SimbleeForMobile.process();
@@ -633,7 +987,6 @@ void update()
   if(eventId != ontime) SimbleeForMobile.updateValue(ontime, onTime);
   if(eventId != cooltime) SimbleeForMobile.updateValue(cooltime, coolTime);
   if(eventId != runtime) SimbleeForMobile.updateValue(runtime, TIME);
-  Serial.print(eventId);
 }
 
 void fl1event()
@@ -855,6 +1208,125 @@ void rl4event()
       SimbleeForMobile.updateColor(rl4ID, BLACK);
       SimbleeForMobile.updateColor(RL4, BLACK);
       delay(offTime);
+
+}
+
+
+void getOrientation()
+{
+  if (readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01) {  // On interrupt, check if data ready interrupt
+    readAccelData(accelCount);  // Read the x/y/z adc values
+    getAres();
+     
+    // Now we'll calculate the accleration value into actual g's
+    ax = (float)accelCount[0]*aRes; // - accelBias[0];  // get actual g value, this depends on scale being set
+    ay = (float)accelCount[1]*aRes; // - accelBias[1];   
+    az = (float)accelCount[2]*aRes; // - accelBias[2];  
+   
+    readGyroData(gyroCount);  // Read the x/y/z adc values
+    getGres();
+ 
+    // Calculate the gyro value into actual degrees per second
+    gx = (float)gyroCount[0]*gRes;  // get actual gyro value, this depends on scale being set
+    gy = (float)gyroCount[1]*gRes;  
+    gz = (float)gyroCount[2]*gRes;   
+  
+    readMagData(magCount);  // Read the x/y/z adc values
+    getMres();
+    magbias[0] = -554.;  // User environmental x-axis correction in milliGauss, should be automatically calculated
+    magbias[1] = -83.;  // User environmental x-axis correction in milliGauss
+    magbias[2] = -84.;  // User environmental x-axis correction in milliGauss
+    
+    // Calculate the magnetometer values in milliGauss
+    // Include factory calibration per data sheet and user environmental corrections
+    mx = (float)magCount[0]*mRes*magCalibration[0] - magBias[0];  // get actual magnetometer value, this depends on scale being set
+    my = (float)magCount[1]*mRes*magCalibration[1] - magBias[1];  
+    mz = (float)magCount[2]*mRes*magCalibration[2] - magBias[2];   
+
+  }
+  
+  Now = micros();
+  deltat = ((Now - lastUpdate)/1000000.0f); // set integration time by time elapsed since last filter update
+  lastUpdate = Now;
+
+  sum += deltat; // sum for averaging filter update rate
+  sumCount++;
+
+  MadgwickQuaternionUpdate(ax, ay, az, gx*PI/180.0f, gy*PI/180.0f, gz*PI/180.0f,  my,  mx, mz);
+  
+  if (!AHRS) {
+    delt_t = millis() - count;
+    if(delt_t > 500) {
+
+    if(SerialDebug) {
+    // Print acceleration values in milligs!
+    Serial.print("X-acceleration: "); Serial.print(1000*ax); Serial.print(" mg ");
+    Serial.print("Y-acceleration: "); Serial.print(1000*ay); Serial.print(" mg ");
+    Serial.print("Z-acceleration: "); Serial.print(1000*az); Serial.println(" mg ");
+// 
+//    // Print gyro values in degree/sec
+    Serial.print("X-gyro rate: "); Serial.print(gx, 3); Serial.print(" degrees/sec "); 
+    Serial.print("Y-gyro rate: "); Serial.print(gy, 3); Serial.print(" degrees/sec "); 
+    Serial.print("Z-gyro rate: "); Serial.print(gz, 3); Serial.println(" degrees/sec"); 
+//    
+//    // Print mag values in degree/sec
+    Serial.print("X-mag field: "); Serial.print(mx); Serial.print(" mG "); 
+    Serial.print("Y-mag field: "); Serial.print(my); Serial.print(" mG "); 
+    Serial.print("Z-mag field: "); Serial.print(mz); Serial.println(" mG"); 
+ }
+    
+    count = millis();
+    }
+  }
+  else {
+      
+    // Serial print and/or display at 0.5 s rate independent of data rates
+    delt_t = millis() - count;
+    if (delt_t > 50) { // update LCD once per half-second independent of read rate
+
+    if(SerialDebug) {
+    Serial.print("ax = "); Serial.print((int)1000*ax);  
+    Serial.print(" ay = "); Serial.print((int)1000*ay); 
+    Serial.print(" az = "); Serial.print((int)1000*az); Serial.println(" mg");
+    Serial.print("gx = "); Serial.print( gx, 2); 
+    Serial.print(" gy = "); Serial.print( gy, 2); 
+    Serial.print(" gz = "); Serial.print( gz, 2); Serial.println(" deg/s");
+    Serial.print("mx = "); Serial.print( (int)mx ); 
+    Serial.print(" my = "); Serial.print( (int)my ); 
+    Serial.print(" mz = "); Serial.print( (int)mz ); Serial.println(" mG");
+    
+    Serial.print("q0 = "); Serial.print(q[0]);
+    Serial.print(" qx = "); Serial.print(q[1]); 
+    Serial.print(" qy = "); Serial.print(q[2]); 
+    Serial.print(" qz = "); Serial.println(q[3]); 
+    }               
+    
+    yaw   = atan2(2.0f * (q[1] * q[2] + q[0] * q[3]), q[0] * q[0] + q[1] * q[1] - q[2] * q[2] - q[3] * q[3]);   
+    pitch = -asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
+    roll  = atan2(2.0f * (q[0] * q[1] + q[2] * q[3]), q[0] * q[0] - q[1] * q[1] - q[2] * q[2] + q[3] * q[3]);
+    pitch *= 180.0f / PI;
+    yaw   *= 180.0f / PI; 
+    yaw   += 9; // Declination at Pittsburgh, PA: 6/23/17, IGRF12
+    roll  *= 180.0f / PI;
+     
+    data[6] = (float) yaw+180;
+    data[7] = (float) pitch;
+    data[8] = (float) roll;
+    
+    Serial.print("Orientation: ");
+    Serial.print((float)yaw+180);
+    Serial.print(F(" "));
+    Serial.print((float)pitch);
+    Serial.print(F(" "));
+    Serial.print((float)roll);
+    Serial.println(F(""));
+    
+
+    count = millis(); 
+    sumCount = 0;
+    sum = 0;    
+    }
+  }
 
 }
 
