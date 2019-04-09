@@ -185,7 +185,7 @@ uint8_t Mscale = MFS_16BITS; // Choose either 14-bit or 16-bit magnetometer reso
 uint8_t Mmode = 0x02;        // 2 for 8 Hz, 6 for 100 Hz continuous magnetometer data read
 float aRes, gRes, mRes;      // scale resolutions per LSB for the sensors
 
-#define AHRS false         // Set to false for basic data read
+#define AHRS true         // Set to false for basic data read
 #define SerialDebug true  // Set to true to get Serial output for debugging
 
 // Pin definitions
@@ -259,6 +259,9 @@ uint8_t Wave2_sf; // 8-bit field in which to store switch Wave2_sf ID number
 uint8_t Wave2_sb; // 8-bit field in which to store switch Wave2_sb ID number
 uint8_t Wave3; // 8-bit field in which to store switch Wave3 ID number
 uint8_t Warmup; // 8-bit field in which to store switch Warmup ID number  
+uint8_t text_roll;
+uint8_t text_pitch;
+uint8_t text_yaw;
 int fl1 = 23; // pin number for seg1
 int fl3 = 4; // pin number for seg3
 int fr1 = 3; // pin number for seg5
@@ -516,6 +519,7 @@ void setup() {
 }
 void loop() {
   getOrientation();
+  
   if(needsUpdate){
     update;
     needsUpdate = false;
@@ -564,6 +568,7 @@ uint32_t cooltime;
 unsigned long runtime;
 void ui() { 
   SimbleeForMobile.beginScreen(screenColor,PORTRAIT); 
+  
   SimbleeForMobile.drawText(statusX, statusY, "Status", statusColor, statusFont);
   SimbleeForMobile.drawText(startX, startY, "Start", startColor, startFont);
   SimbleeForMobile.drawText(modeX, modeY, "Mode", modeColor, modeFont);
@@ -597,6 +602,9 @@ void ui() {
   rr3ID = SimbleeForMobile.drawRect(r3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
   rl1ID = SimbleeForMobile.drawRect(l1IDX, rIDY, limbIDL, limbIDW, limbIndColor);
   rl3ID = SimbleeForMobile.drawRect(l3IDX, rIDY, limbIDL, limbIDW, limbIndColor);
+  text_roll = SimbleeForMobile.drawText(40,  540, roll);
+  text_pitch = SimbleeForMobile.drawText(80,  540, pitch);
+  text_yaw = SimbleeForMobile.drawText(120,  540, yaw);
   SimbleeForMobile.endScreen();
   update;
 }
@@ -956,8 +964,14 @@ void getOrientation()
     Serial.print(F(" "));
     Serial.print((float)roll);
     Serial.println(F(""));
-    
 
+    if (SimbleeForMobile.updatable){
+      SimbleeForMobile.updateValue(text_roll, roll);
+      SimbleeForMobile.updateValue(text_pitch, pitch);
+      SimbleeForMobile.updateValue(text_yaw, yaw);
+    }
+    
+    SimbleeForMobile.process();
     count = millis(); 
     sumCount = 0;
     sum = 0;    

@@ -1,6 +1,31 @@
  #include <SimbleeForMobile.h>
 //#include "thermometer_png.h"
 //#include "CAT.h"
+
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055_SIMBLEE.h>
+#include <utility/imumaths.h>
+
+
+/* Set the delay between fresh samples */
+#define BNO055_SAMPLERATE_DELAY_MS (100)
+//Adafruit_BNO055 bno = Adafruit_BNO055();
+Adafruit_BNO055_SIMBLEE bno = Adafruit_BNO055_SIMBLEE();
+
+//pins for the IO pins on BNO055
+int vddio = 2;
+//int gndio = 6;
+int vddio20 = 20;
+int vddio21 = 21;
+int vddio28 = 28; 
+
+int gndio23 = 23;
+int gndio25 = 25;
+int gndio29 = 29;
+
+float rot_x, rot_y, rot_z;
+
+
 uint8_t Switch; // 8-bit field in which to store switch start ID number
 uint8_t Wave_F; // 8-bit field in which to store switch Wave_F ID number
 uint8_t L1; // 8-bit field in which to store button L1 ID number
@@ -11,6 +36,10 @@ uint8_t L5; // 8-bit field in which to store button L5 ID number
 uint8_t L6; // 8-bit field in which to store button L6 ID number
 uint8_t L7; // 8-bit field in which to store button L7 ID number
 uint8_t L8; // 8-bit field in which to store button L8 ID number
+uint8_t text_x;
+uint8_t text_y;
+uint8_t text_z;
+
 
 uint8_t Wave_B; // 8-bit field in which to store switch Wave_B ID number
 
@@ -182,7 +211,61 @@ void l8event();
 void off();
 
 void setup() {
+  // set up BNO
+  pinMode(vddio20, OUTPUT);
+  pinMode(vddio21, OUTPUT);
+  pinMode(vddio28, OUTPUT);
+  pinMode(gndio23, OUTPUT);
+  pinMode(gndio25, OUTPUT);
+  pinMode(gndio29, OUTPUT);
+
+  // mosfet gpios for the legs
+  pinMode(leg0pin, OUTPUT);
+  pinMode(leg1pin, OUTPUT);
+  pinMode(leg2pin, OUTPUT);
+  pinMode(leg3pin, OUTPUT);
+  pinMode(leg4pin, OUTPUT);  
+  pinMode(leg5pin, OUTPUT);
+  pinMode(leg6pin, OUTPUT);
+  pinMode(leg7pin, OUTPUT);
+  
+  digitalWrite(vddio20, HIGH);
+  digitalWrite(vddio21, HIGH);
+  digitalWrite(vddio28, HIGH);
+  digitalWrite(gndio23, LOW);
+  digitalWrite(gndio25, LOW);
+  digitalWrite(gndio29, LOW);
+  digitalWrite(leg7pin, HIGH);
+  delay(1000);
+
+  
   Serial.begin(9600);
+
+  Serial.println("Orientation Sensor Raw Data Test"); Serial.println("");
+  delay(100);
+  /* Initialise the sensor */
+  if(!bno.begin())
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+    while(1);
+  }
+
+  delay(1000);
+
+  /* Display the current temperature */
+  int8_t temp = bno.getTemp();
+  Serial.print("Current Temperature: ");
+  Serial.print(temp);
+  Serial.println(" C");
+  Serial.println("");
+
+  bno.setExtCrystalUse(false);
+
+   
+  Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
+
+  // Set up legs
   pinMode(l1, OUTPUT);
   pinMode(l2, OUTPUT);
   pinMode(l3, OUTPUT);
@@ -280,6 +363,9 @@ void ui() {
   l6ID = SimbleeForMobile.drawRect(r2IDX, fIDY, limbIDL, limbIDW, limbIndColor);
   l7ID = SimbleeForMobile.drawRect(r3IDX, fIDY, limbIDL, limbIDW, limbIndColor);
   l8ID = SimbleeForMobile.drawRect(r4IDX, fIDY, limbIDL, limbIDW, limbIndColor);
+  text_x = SimbleeForMobile.drawText(40,  540, rot_x);
+  text_y = SimbleeForMobile.drawText(80,  540, rot_y);
+  text_z = SimbleeForMobile.drawText(120,  540, rot_z);
   SimbleeForMobile.endScreen();
   update;
 }
@@ -676,7 +762,65 @@ void l8event()
 
 }
 
+void getOrientation()
+{
+  // Possible vector values can be:
+  // - VECTOR_ACCELEROMETER - m/s^2
+  // - VECTOR_MAGNETOMETER  - uT
+  // - VECTOR_GYROSCOPE     - rad/s
+  // - VECTOR_EULER         - degrees
+  // - VECTOR_LINEARACCEL   - m/s^2
+  // - VECTOR_GRAVITY       - m/s^2
+  imu::Vector<3> euler = bno.getVector(Adafruit_BNO055_SIMBLEE::VECTOR_EULER);
 
+  /* Display the floating point data */
+  Serial.print("X: ");
+  Serial.print(euler.x());
+  Serial.print(" Y: ");
+  Serial.print(euler.y());
+  Serial.print(" Z: ");
+  Serial.print(euler.z());
+  Serial.println("\t\t");
+  
+  /*
+  // Quaternion data
+  imu::Quaternion quat = bno.getQuat();
+  Serial.print("qW: ");
+  Serial.print(quat.w(), 4);
+  Serial.print(" qX: ");
+  Serial.print(quat.y(), 4);
+  Serial.print(" qY: ");
+  Serial.print(quat.x(), 4);
+  Serial.print(" qZ: ");
+  Serial.print(quat.z(), 4);
+  Serial.print("\t\t");
+  */
+
+  /* Display calibration status for each sensor. */
+//  uint8_t system, gyro, accel, mag = 0;
+//  bno.getCalibration(&system, &gyro, &accel, &mag);
+//  Serial.print("CALIBRATION: Sys=");
+//  Serial.print(system, DEC);
+//  Serial.print(" Gyro=");
+//  Serial.print(gyro, DEC);
+//  Serial.print(" Accel=");
+//  Serial.print(accel, DEC);
+//  Serial.print(" Mag=");
+//  Serial.println(mag, DEC);
+
+  rot_x = euler.x();
+  rot_y = euler.y();
+  rot_z = euler.z();
+  if (SimbleeForMobile.updatable){
+        SimbleeForMobile.updateValue(text_x, rot_x);
+        SimbleeForMobile.updateValue(text_y, rot_y);
+        SimbleeForMobile.updateValue(text_z, rot_z);
+      }
+    
+  SimbleeForMobile.process();
+  
+  delay(BNO055_SAMPLERATE_DELAY_MS);
+}
 
 void ui_event(event_t &event){
   if (event.id == Switch){
