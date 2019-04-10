@@ -402,6 +402,12 @@ int imageY = 0;
 volatile bool needsUpdate;
 uint32_t eventId;
 
+int SDA = 2;
+int pullup = 4;
+int SCL = 3;
+int interrupt = 5;
+int VDDIO = 6;
+
 void update();
 void wave1b();
 void wave1f();
@@ -467,9 +473,15 @@ void setup() {
   pinMode(rr3, OUTPUT);
   pinMode(rl1, OUTPUT);
   pinMode(rl3, OUTPUT);
+  pinMode(interrupt, INPUT);
+  pinMode(VDDIO,OUTPUT);
+  pinMode(pullup,OUTPUT);
+  digitalWrite(VDDIO,HIGH);
+  digitalWrite(pullup,HIGH);
+  digitalWrite(interrupt, LOW);
 
   
-  Wire2.beginOnPins(SCLpin,SDApin);
+  Wire2.beginOnPins(SCL,SDA);
   // TWBR = 12;  // 400 kbit/sec I2C speed
   Serial.begin(9600);
   
@@ -480,8 +492,7 @@ void setup() {
   delay(3000);
 
   // Set up the interrupt pin, its set as active high, push-pull
-  pinMode(intPin, INPUT);
-  digitalWrite(intPin, LOW);
+
   
 
   // IMU setup
@@ -965,13 +976,7 @@ void getOrientation()
     Serial.print((float)roll);
     Serial.println(F(""));
 
-    if (SimbleeForMobile.updatable){
-      SimbleeForMobile.updateValue(text_roll, roll);
-      SimbleeForMobile.updateValue(text_pitch, pitch);
-      SimbleeForMobile.updateValue(text_yaw, yaw);
-    }
     
-    SimbleeForMobile.process();
     count = millis(); 
     sumCount = 0;
     sum = 0;    

@@ -279,11 +279,20 @@ void setup() {
   SimbleeForMobile.deviceName = "SEAQ 2";
   SimbleeForMobile.begin();
 }
+
+float sample_rate = 1;
+unsigned long last_time = 0;
+unsigned long this_time;
 void loop() {
   if(needsUpdate){
     update;
     needsUpdate = false;
   }
+  this_time = millis();
+  if (this_time - last_time > sample_rate){
+    getOrientation();
+  }
+  last_time = millis();
   if (start == 0){
       off();
   }
