@@ -47,7 +47,7 @@ uint8_t Warmup; // 8-bit field in which to store switch Warmup ID number
 
 int leg0pin = 18;
 int leg1pin = 17;
-int leg2pin = 19;
+int leg2pin = 11;
 int leg3pin = 14;
 int leg4pin = 13;
 int leg5pin = 10;
@@ -57,7 +57,7 @@ int leg7pin = 16;
 
 int l1 = 18; // pin number for seg1
 int l2 = 17; // pin number for seg2 
-int l3 = 19; // pin number for seg3
+int l3 = 11 ; // pin number for seg3
 int l4 = 14; // pin number for seg4
 int l5 = 13; // pin number for seg5
 int l6 = 10; // pin number for seg6
