@@ -199,7 +199,7 @@ uint32_t eventId;
 
 void update();
 void wavef();
-void wavef();
+void waveb();
 void l1event();
 void l2event();
 void l3event();
@@ -301,7 +301,7 @@ void loop() {
       wavef();
     }
     if (wave_B == 1){
-      wavef();
+      waveb();
     }
     if (IL1 == 1){
       l1event();
@@ -408,125 +408,47 @@ void wavef()
       wave_F = 0;
     }
   SimbleeForMobile.process();  
-//  digitalWrite(rr4, HIGH);
   digitalWrite(l1, HIGH);
   digitalWrite(l2, LOW);
   digitalWrite(l3, LOW);
-  digitalWrite(l4, LOW);
+  digitalWrite(l4, HIGH);
   digitalWrite(l5, LOW);
   digitalWrite(l6, LOW);
   digitalWrite(l7, LOW);
   digitalWrite(l8, LOW);
   SimbleeForMobile.updateColor(l1ID, RED);
+  SimbleeForMobile.updateColor(l3ID, RED);
   delay(onTime);
   }
   digitalWrite(l1, LOW);
   SimbleeForMobile.updateColor(l1ID, BLACK);
-  delay(offTime);
+  digitalWrite(l3, LOW);
+  SimbleeForMobile.updateColor(l3ID, BLACK);
+  delay(200);
   if (wave_F == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
       count = 1;
       wave_F = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l2, HIGH);
-  SimbleeForMobile.updateColor(l2ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process(); 
+    digitalWrite(l2, HIGH);
+    SimbleeForMobile.updateColor(l2ID, RED);
+    digitalWrite(l4, HIGH);
+    SimbleeForMobile.updateColor(l4ID, RED);
+    delay(onTime);
   }
   digitalWrite(l2, LOW);
   SimbleeForMobile.updateColor(l2ID, BLACK);
-  delay(offTime);
-  if (wave_F == 1){   
-    currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_F = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l3, HIGH);
-  SimbleeForMobile.updateColor(l3ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l3, LOW);
-  SimbleeForMobile.updateColor(l3ID, BLACK);
-  delay(offTime);
-  if (wave_F == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_F = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l4, HIGH);
-  SimbleeForMobile.updateColor(l4ID, RED);
-  delay(onTime);
-  }
   digitalWrite(l4, LOW);
   SimbleeForMobile.updateColor(l4ID, BLACK);
   delay(offTime);
-  if (wave_F == 1){   
-    currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_F = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l5, HIGH);
-  SimbleeForMobile.updateColor(l5ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l5, LOW);
-  SimbleeForMobile.updateColor(l5ID, BLACK);
-  delay(offTime);
-
-  if (wave_F == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_F = 0;
-    }
-
-  SimbleeForMobile.process();  
-  digitalWrite(l6, HIGH);
-  SimbleeForMobile.updateColor(l6ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l6, LOW);
-  SimbleeForMobile.updateColor(l6ID, BLACK);
-  delay(offTime);
-  if (wave_F == 1){   
-    currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_F = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l7, HIGH);
-  SimbleeForMobile.updateColor(l7ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l7, LOW);
-  SimbleeForMobile.updateColor(l7ID, BLACK);
-  delay(offTime);
-  if (wave_F == 1){   
-    currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_F = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l8, HIGH);
-  SimbleeForMobile.updateColor(l8ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l8, LOW);
-  SimbleeForMobile.updateColor(l8ID, BLACK);
-  delay(offTime);
+  
 }
+
 void waveb() 
 {
-  if (wave_B == 1){
+    if (wave_B == 1){
     if(count == 1){
       startTime = millis();
       count = 2;
@@ -537,16 +459,56 @@ void waveb()
       wave_B = 0;
     }
   SimbleeForMobile.process();  
-  digitalWrite(l5, LOW);
-  digitalWrite(l6, LOW);
-  digitalWrite(l7, LOW);
-  digitalWrite(l8, HIGH);
   digitalWrite(l1, LOW);
   digitalWrite(l2, LOW);
   digitalWrite(l3, LOW);
   digitalWrite(l4, LOW);
-  SimbleeForMobile.updateColor(l8ID, RED);
+  digitalWrite(l5, HIGH);
+  digitalWrite(l6, LOW);
+  digitalWrite(l7, LOW);
+  digitalWrite(l8, LOW);
+  SimbleeForMobile.updateColor(l5ID, RED);
   delay(onTime);
+  }
+  digitalWrite(l5, LOW);
+  SimbleeForMobile.updateColor(l5ID, BLACK);
+  if (wave_B == 1){
+        currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)){
+      count = 1;
+      wave_B = 0;
+    }
+    SimbleeForMobile.process(); 
+    digitalWrite(l6, HIGH);
+    SimbleeForMobile.updateColor(l6ID, RED);
+    delay(onTime);
+  }
+  digitalWrite(l6, LOW);
+  SimbleeForMobile.updateColor(l6ID, BLACK);
+  delay(offTime);
+  if (wave_B == 1){
+        currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)){
+      count = 1;
+      wave_B = 0;
+    }
+    SimbleeForMobile.process(); 
+    digitalWrite(l7, HIGH);
+    SimbleeForMobile.updateColor(l7ID, RED);
+    delay(onTime);
+  }
+  digitalWrite(l7, LOW);
+  SimbleeForMobile.updateColor(l7ID, BLACK);
+  if (wave_B == 1){
+        currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)){
+      count = 1;
+      wave_B = 0;
+    }
+    SimbleeForMobile.process(); 
+    digitalWrite(l8, HIGH);
+    SimbleeForMobile.updateColor(l8ID, RED);
+    delay(onTime);
   }
   digitalWrite(l8, LOW);
   SimbleeForMobile.updateColor(l8ID, BLACK);
@@ -557,80 +519,23 @@ void waveb()
       count = 1;
       wave_B = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l7, HIGH);
-  SimbleeForMobile.updateColor(l7ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process(); 
+    digitalWrite(l1, HIGH);
+    SimbleeForMobile.updateColor(l1ID, RED);
+    delay(onTime);
   }
-  digitalWrite(l7, LOW);
-  SimbleeForMobile.updateColor(l7ID, BLACK);
-  delay(offTime);
-    if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l6, HIGH);
-  SimbleeForMobile.updateColor(l6ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l6, LOW);
-  SimbleeForMobile.updateColor(l6ID, BLACK);
-  delay(offTime);
-    if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
-  SimbleeForMobile.process();
-  digitalWrite(l5, HIGH);
-  SimbleeForMobile.updateColor(l5ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l5, LOW);
-  SimbleeForMobile.updateColor(l5ID, BLACK);
-  delay(offTime);
+  digitalWrite(l1, LOW);
+  SimbleeForMobile.updateColor(l1ID, BLACK);
   if (wave_B == 1){
         currentTime = millis();
     if (abs(currentTime - startTime) >= abs(TIME)){
       count = 1;
       wave_B = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l4, HIGH);
-  SimbleeForMobile.updateColor(l4ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l4, LOW);
-  SimbleeForMobile.updateColor(l4ID, BLACK);
-  delay(offTime);
-  if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l3, HIGH);
-  SimbleeForMobile.updateColor(l3ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l3, LOW);
-  SimbleeForMobile.updateColor(l3ID, BLACK);
-  delay(offTime);
-  if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l2, HIGH);
-  SimbleeForMobile.updateColor(l2ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process(); 
+    digitalWrite(l2, HIGH);
+    SimbleeForMobile.updateColor(l2ID, RED);
+    delay(onTime);
   }
   digitalWrite(l2, LOW);
   SimbleeForMobile.updateColor(l2ID, BLACK);
@@ -641,14 +546,27 @@ void waveb()
       count = 1;
       wave_B = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l1, HIGH);
-  SimbleeForMobile.updateColor(l1ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process(); 
+    digitalWrite(l3, HIGH);
+    SimbleeForMobile.updateColor(l3ID, RED);
+    delay(onTime);
   }
-  digitalWrite(l1, LOW);
-  SimbleeForMobile.updateColor(l1ID, BLACK);
-  delay(offTime + coolTime);
+  digitalWrite(l3, LOW);
+  SimbleeForMobile.updateColor(l3ID, BLACK);
+  if (wave_B == 1){
+        currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)){
+      count = 1;
+      wave_B = 0;
+    }
+    SimbleeForMobile.process(); 
+    digitalWrite(l4, HIGH);
+    SimbleeForMobile.updateColor(l4ID, RED);
+    delay(onTime);
+  }
+  digitalWrite(l4, LOW);
+  SimbleeForMobile.updateColor(l4ID, BLACK);
+  delay(offTime);
 }
 
 void update()

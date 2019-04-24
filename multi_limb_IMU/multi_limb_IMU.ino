@@ -494,7 +494,7 @@ void setup() {
   // Set up the interrupt pin, its set as active high, push-pull
   digitalWrite(interrupt, LOW);
   
-  I2Cscan();
+  //I2Cscan();
   // IMU setup
   byte c = readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);  // Read WHO_AM_I register for MPU-9250
   Serial.println(c, HEX);

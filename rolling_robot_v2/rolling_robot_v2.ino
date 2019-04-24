@@ -1,4 +1,4 @@
- #include <SimbleeForMobile.h>
+#include <SimbleeForMobile.h>
 //#include "thermometer_png.h"
 //#include "CAT.h"
 
@@ -17,7 +17,7 @@ int vddio = 2;
 //int gndio = 6;
 int vddio20 = 20;
 int vddio21 = 21;
-int vddio28 = 28; 
+int vddio28 = 28;
 
 int gndio23 = 23;
 int gndio25 = 25;
@@ -43,7 +43,7 @@ uint8_t text_z;
 
 uint8_t Wave_B; // 8-bit field in which to store switch Wave_B ID number
 
-uint8_t Warmup; // 8-bit field in which to store switch Warmup ID number  
+uint8_t Warmup; // 8-bit field in which to store switch Warmup ID number
 
 int leg0pin = 18;
 int leg1pin = 17;
@@ -56,13 +56,14 @@ int leg7pin = 16;
 
 
 int l1 = 18; // pin number for seg1
-int l2 = 17; // pin number for seg2 
+int l2 = 17; // pin number for seg2
 int l3 = 19; // pin number for seg3
 int l4 = 14; // pin number for seg4
 int l5 = 13; // pin number for seg5
 int l6 = 10; // pin number for seg6
 int l7 = 15; // pin number for seg1
-int l8 = 16; // pin number for seg2 
+int l8 = 16; // pin number for seg2
+int pin_array[] = {18, 17, 19, 14, 13, 10, 15, 16};
 
 int IL1 = 0; //initial value of indicator of IL1 mode
 int IL2 = 0; //initial value of indicator of IL2 mode
@@ -87,7 +88,7 @@ int start = 0; //initial value of indicator of switch start
 int onTime = 150; //on time for each segments
 int offTime = 500; //off time for each segments
 int coolTime = 0; //off time for each segment
-unsigned long TIME = 60000*30; //Run time
+unsigned long TIME = 60000 * 30; //Run time
 uint32_t warmupTIME = 2200;
 int l1ID; //indicator of front left limb 1
 int l2ID; //indicator of front left limb 2
@@ -105,7 +106,7 @@ unsigned long currentTime;
 
 // ui setup
 color_t screenColor = WHITE;
-color_t textFieldColor = rgb(85,85,85); // input text field color (gray)
+color_t textFieldColor = rgb(85, 85, 85); // input text field color (gray)
 color_t textColor = WHITE; // input text color
 color_t statusColor = BLACK; // status font color
 int statusX = 50;
@@ -139,7 +140,7 @@ int offTimeY = 135;
 int coolTimeX = 155;
 int coolTimeY = 95;
 int TIMEX = 155;
-int TIMEY = 135; 
+int TIMEY = 135;
 int onTimeTextX = 85;
 int onTimeTextY = 95;
 int offTimeTextX = 85;
@@ -199,7 +200,7 @@ uint32_t eventId;
 
 void update();
 void wavef();
-void wavef();
+void waveb();
 void l1event();
 void l2event();
 void l3event();
@@ -209,6 +210,9 @@ void l6event();
 void l7event();
 void l8event();
 void off();
+void getOrientation();
+void actuate();
+void IMUPos();
 
 void setup() {
   // set up BNO
@@ -224,11 +228,11 @@ void setup() {
   pinMode(leg1pin, OUTPUT);
   pinMode(leg2pin, OUTPUT);
   pinMode(leg3pin, OUTPUT);
-  pinMode(leg4pin, OUTPUT);  
+  pinMode(leg4pin, OUTPUT);
   pinMode(leg5pin, OUTPUT);
   pinMode(leg6pin, OUTPUT);
   pinMode(leg7pin, OUTPUT);
-  
+
   digitalWrite(vddio20, HIGH);
   digitalWrite(vddio21, HIGH);
   digitalWrite(vddio28, HIGH);
@@ -238,17 +242,19 @@ void setup() {
   digitalWrite(leg7pin, HIGH);
   delay(1000);
 
-  
+
   Serial.begin(9600);
 
   Serial.println("Orientation Sensor Raw Data Test"); Serial.println("");
   delay(100);
+
   /* Initialise the sensor */
-  if(!bno.begin())
+  Serial.print(bno.begin());
+  if (!bno.begin())
   {
     /* There was a problem detecting the BNO055 ... check your connections */
     Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1);
+    while (1);
   }
 
   delay(1000);
@@ -262,7 +268,7 @@ void setup() {
 
   bno.setExtCrystalUse(false);
 
-   
+
   Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
 
   // Set up legs
@@ -284,50 +290,50 @@ float sample_rate = 1; // this sample rate controls how often we get orientation
 unsigned long last_time = 0;
 unsigned long this_time;
 void loop() {
-  if(needsUpdate){
+  if (needsUpdate) {
     update;
     needsUpdate = false;
   }
   this_time = millis();
-  if (this_time - last_time > sample_rate){
+  if (this_time - last_time > sample_rate) {
     getOrientation();
   }
   last_time = millis();
-  if (start == 0){
-      off();
+  if (start == 0) {
+    off();
   }
-  if (start == 1){
-    if (wave_F == 1){
+  if (start == 1) {
+    if (wave_F == 1) {
       wavef();
     }
-    if (wave_B == 1){
-      wavef();
+    if (wave_B == 1) {
+      waveb();
     }
-    if (IL1 == 1){
+    if (IL1 == 1) {
       l1event();
     }
-    if (IL2 == 1){
+    if (IL2 == 1) {
       l2event();
     }
-    if (IL3 == 1){
+    if (IL3 == 1) {
       l3event();
     }
-    if (IL4 == 1){
+    if (IL4 == 1) {
       l4event();
     }
-    if (IL5 == 1){
+    if (IL5 == 1) {
       l5event();
     }
-    if (IL6 == 1){
+    if (IL6 == 1) {
       l6event();
     }
-    if (IL7 == 1){
+    if (IL7 == 1) {
       l7event();
     }
-    if (IL8 == 1){
+    if (IL8 == 1) {
       l8event();
-    }   
-    
+    }
+
   }
   SimbleeForMobile.process();
 }
@@ -336,9 +342,9 @@ uint32_t ontime;
 uint32_t offtime;
 uint32_t cooltime;
 unsigned long runtime;
-void ui() { 
+void ui() {
 
-  SimbleeForMobile.beginScreen(screenColor,PORTRAIT); 
+  SimbleeForMobile.beginScreen(screenColor, PORTRAIT);
   SimbleeForMobile.drawText(statusX, statusY, "Status", statusColor, statusFont);
   SimbleeForMobile.drawText(startX, startY, "Start", startColor, startFont);
   SimbleeForMobile.drawText(modeX, modeY, "Mode", modeColor, modeFont);
@@ -349,9 +355,9 @@ void ui() {
   SimbleeForMobile.drawText(offTimeX, offTimeY, "OFF Time", offTimeColor, offTimeFont);
   SimbleeForMobile.drawText(coolTimeX, coolTimeY, "COOL Time", coolTimeColor, coolTimeFont);
   SimbleeForMobile.drawText(TIMEX, TIMEY, "RUN Time", TIMEColor, TIMEFont);
-  Switch = SimbleeForMobile.drawSwitch(startSwitchX,startSwitchY, startSwitchColor); 
-  Wave_F = SimbleeForMobile.drawSwitch(waveSwitchX1,wavefSwitchY,waveSwitchColor); 
-  Wave_B = SimbleeForMobile.drawSwitch(waveSwitchX2,wavefSwitchY,waveSwitchColor);
+  Switch = SimbleeForMobile.drawSwitch(startSwitchX, startSwitchY, startSwitchColor);
+  Wave_F = SimbleeForMobile.drawSwitch(waveSwitchX1, wavefSwitchY, waveSwitchColor);
+  Wave_B = SimbleeForMobile.drawSwitch(waveSwitchX2, wavefSwitchY, waveSwitchColor);
   L1 = SimbleeForMobile.drawButton(l1buttonX, rbuttonY, buttonW, "1", BLACK);
   L2 = SimbleeForMobile.drawButton(l2buttonX, rbuttonY, buttonW, "2", BLACK);
   L3 = SimbleeForMobile.drawButton(l3buttonX, rbuttonY, buttonW, "3", BLACK);
@@ -359,7 +365,7 @@ void ui() {
   L5 = SimbleeForMobile.drawButton(r1buttonX, rbuttonY, buttonW, "1", BLACK);
   L6 = SimbleeForMobile.drawButton(r2buttonX, rbuttonY, buttonW, "2", BLACK);
   L7 = SimbleeForMobile.drawButton(r3buttonX, rbuttonY, buttonW, "3", BLACK);
-  L8 = SimbleeForMobile.drawButton(r4buttonX, rbuttonY, buttonW, "4", BLACK);  
+  L8 = SimbleeForMobile.drawButton(r4buttonX, rbuttonY, buttonW, "4", BLACK);
   ontime = SimbleeForMobile.drawTextField(onTimeTextX, onTimeTextY, timeTextWidth, onTime, "", textColor, textFieldColor);
   offtime = SimbleeForMobile.drawTextField(offTimeTextX, offTimeTextY, timeTextWidth, offTime, "", textColor, textFieldColor);
   cooltime = SimbleeForMobile.drawTextField(coolTimeTextX, coolTimeTextY, timeTextWidth, coolTime, "", textColor, textFieldColor);
@@ -381,10 +387,35 @@ void ui() {
 
 void off()
 {
-    wave_F = 0;
-    wave_B = 0;
+  wave_F = 0;
+  wave_B = 0;
 
-    digitalWrite(l1, LOW);
+  digitalWrite(l1, LOW);
+  digitalWrite(l2, LOW);
+  digitalWrite(l3, LOW);
+  digitalWrite(l4, LOW);
+  digitalWrite(l5, LOW);
+  digitalWrite(l6, LOW);
+  digitalWrite(l7, LOW);
+  digitalWrite(l8, LOW);
+  delay(offTime);
+}
+
+void wavef()
+{
+  if (wave_F == 1) {
+    if (count == 1) {
+      startTime = millis();
+      count = 2;
+    }
+    currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)) {
+      count = 1;
+      wave_F = 0;
+    }
+    SimbleeForMobile.process();
+    //  digitalWrite(rr4, HIGH);
+    digitalWrite(l1, HIGH);
     digitalWrite(l2, LOW);
     digitalWrite(l3, LOW);
     digitalWrite(l4, LOW);
@@ -392,382 +423,383 @@ void off()
     digitalWrite(l6, LOW);
     digitalWrite(l7, LOW);
     digitalWrite(l8, LOW);
-    delay(offTime);
-}
-
-void wavef() 
-{
-  if (wave_F == 1){
-    if(count == 1){
-      startTime = millis();
-      count = 2;
-    }
-    currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_F = 0;
-    }
-  SimbleeForMobile.process();  
-//  digitalWrite(rr4, HIGH);
-  digitalWrite(l1, HIGH);
-  digitalWrite(l2, LOW);
-  digitalWrite(l3, LOW);
-  digitalWrite(l4, LOW);
-  digitalWrite(l5, LOW);
-  digitalWrite(l6, LOW);
-  digitalWrite(l7, LOW);
-  digitalWrite(l8, LOW);
-  SimbleeForMobile.updateColor(l1ID, RED);
-  delay(onTime);
+    SimbleeForMobile.updateColor(l1ID, RED);
+    delay(onTime);
   }
   digitalWrite(l1, LOW);
   SimbleeForMobile.updateColor(l1ID, BLACK);
   delay(offTime);
-  if (wave_F == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
+  if (wave_F == 1) {
+    currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)) {
       count = 1;
       wave_F = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l2, HIGH);
-  SimbleeForMobile.updateColor(l2ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process();
+    digitalWrite(l2, HIGH);
+    SimbleeForMobile.updateColor(l2ID, RED);
+    delay(onTime);
   }
   digitalWrite(l2, LOW);
   SimbleeForMobile.updateColor(l2ID, BLACK);
   delay(offTime);
-  if (wave_F == 1){   
+  if (wave_F == 1) {
     currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
+    if (abs(currentTime - startTime) >= abs(TIME)) {
       count = 1;
       wave_F = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l3, HIGH);
-  SimbleeForMobile.updateColor(l3ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process();
+    digitalWrite(l3, HIGH);
+    SimbleeForMobile.updateColor(l3ID, RED);
+    delay(onTime);
   }
   digitalWrite(l3, LOW);
   SimbleeForMobile.updateColor(l3ID, BLACK);
   delay(offTime);
-  if (wave_F == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
+  if (wave_F == 1) {
+    currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)) {
       count = 1;
       wave_F = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l4, HIGH);
-  SimbleeForMobile.updateColor(l4ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process();
+    digitalWrite(l4, HIGH);
+    SimbleeForMobile.updateColor(l4ID, RED);
+    delay(onTime);
   }
   digitalWrite(l4, LOW);
   SimbleeForMobile.updateColor(l4ID, BLACK);
   delay(offTime);
-  if (wave_F == 1){   
+  if (wave_F == 1) {
     currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
+    if (abs(currentTime - startTime) >= abs(TIME)) {
       count = 1;
       wave_F = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l5, HIGH);
-  SimbleeForMobile.updateColor(l5ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process();
+    digitalWrite(l5, HIGH);
+    SimbleeForMobile.updateColor(l5ID, RED);
+    delay(onTime);
   }
   digitalWrite(l5, LOW);
   SimbleeForMobile.updateColor(l5ID, BLACK);
   delay(offTime);
 
-  if (wave_F == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
+  if (wave_F == 1) {
+    currentTime = millis();
+    if (abs(currentTime - startTime) >= abs(TIME)) {
       count = 1;
       wave_F = 0;
     }
 
-  SimbleeForMobile.process();  
-  digitalWrite(l6, HIGH);
-  SimbleeForMobile.updateColor(l6ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process();
+    digitalWrite(l6, HIGH);
+    SimbleeForMobile.updateColor(l6ID, RED);
+    delay(onTime);
   }
   digitalWrite(l6, LOW);
   SimbleeForMobile.updateColor(l6ID, BLACK);
   delay(offTime);
-  if (wave_F == 1){   
+  if (wave_F == 1) {
     currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
+    if (abs(currentTime - startTime) >= abs(TIME)) {
       count = 1;
       wave_F = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l7, HIGH);
-  SimbleeForMobile.updateColor(l7ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process();
+    digitalWrite(l7, HIGH);
+    SimbleeForMobile.updateColor(l7ID, RED);
+    delay(onTime);
   }
   digitalWrite(l7, LOW);
   SimbleeForMobile.updateColor(l7ID, BLACK);
   delay(offTime);
-  if (wave_F == 1){   
+  if (wave_F == 1) {
     currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
+    if (abs(currentTime - startTime) >= abs(TIME)) {
       count = 1;
       wave_F = 0;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l8, HIGH);
-  SimbleeForMobile.updateColor(l8ID, RED);
-  delay(onTime);
+    SimbleeForMobile.process();
+    digitalWrite(l8, HIGH);
+    SimbleeForMobile.updateColor(l8ID, RED);
+    delay(onTime);
   }
   digitalWrite(l8, LOW);
   SimbleeForMobile.updateColor(l8ID, BLACK);
   delay(offTime);
 }
-void waveb() 
+int pos = 1;
+int prevPos = 1;
+float prevAngle = 0;
+void waveb()
 {
-  if (wave_B == 1){
-    if(count == 1){
-      startTime = millis();
-      count = 2;
-    }
-    currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l5, LOW);
-  digitalWrite(l6, LOW);
-  digitalWrite(l7, LOW);
-  digitalWrite(l8, HIGH);
-  digitalWrite(l1, LOW);
-  digitalWrite(l2, LOW);
-  digitalWrite(l3, LOW);
-  digitalWrite(l4, LOW);
-  SimbleeForMobile.updateColor(l8ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l8, LOW);
-  SimbleeForMobile.updateColor(l8ID, BLACK);
-  delay(offTime);
-  if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l7, HIGH);
-  SimbleeForMobile.updateColor(l7ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l7, LOW);
-  SimbleeForMobile.updateColor(l7ID, BLACK);
-  delay(offTime);
-    if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l6, HIGH);
-  SimbleeForMobile.updateColor(l6ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l6, LOW);
-  SimbleeForMobile.updateColor(l6ID, BLACK);
-  delay(offTime);
-    if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
   SimbleeForMobile.process();
-  digitalWrite(l5, HIGH);
-  SimbleeForMobile.updateColor(l5ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l5, LOW);
-  SimbleeForMobile.updateColor(l5ID, BLACK);
-  delay(offTime);
-  if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
+  getOrientation();
+  IMUPos();
+  if (prevPos == pos) {
+    pos = pos - 1;
+    if (pos == 0) {
+      pos = 8;
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l4, HIGH);
-  SimbleeForMobile.updateColor(l4ID, RED);
-  delay(onTime);
+    actuate();
   }
-  digitalWrite(l4, LOW);
-  SimbleeForMobile.updateColor(l4ID, BLACK);
-  delay(offTime);
-  if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
+  // checks for an unclear reading from the IMU as far as position
+  else if (0 == pos) {
+    // even with unclear position the angle clearly drastically changed
+    if (15 < (rot_x - prevAngle)) {
+      pos = prevPos;
+      actuate();
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l3, HIGH);
-  SimbleeForMobile.updateColor(l3ID, RED);
-  delay(onTime);
-  }
-  digitalWrite(l3, LOW);
-  SimbleeForMobile.updateColor(l3ID, BLACK);
-  delay(offTime);
-  if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
+    // no drastic angle change
+    else {
+      if (prevPos == pos) {
+        pos = pos - 1;
+        if (pos == 0) {
+          pos = 8;
+        }
+        actuate();
+      }
     }
-  SimbleeForMobile.process();  
-  digitalWrite(l2, HIGH);
-  SimbleeForMobile.updateColor(l2ID, RED);
-  delay(onTime);
   }
-  digitalWrite(l2, LOW);
-  SimbleeForMobile.updateColor(l2ID, BLACK);
-  delay(offTime);
-  if (wave_B == 1){
-        currentTime = millis();
-    if (abs(currentTime - startTime) >= abs(TIME)){
-      count = 1;
-      wave_B = 0;
-    }
-  SimbleeForMobile.process();  
-  digitalWrite(l1, HIGH);
-  SimbleeForMobile.updateColor(l1ID, RED);
-  delay(onTime);
+  // indicates a step was made
+  else {
+    pos = prevPos;
+    actuate();
   }
-  digitalWrite(l1, LOW);
-  SimbleeForMobile.updateColor(l1ID, BLACK);
-  delay(offTime + coolTime);
+  IMUPos();
+  prevPos = pos;
+  prevAngle = rot_x;
 }
 
+
+
+
+float angle;
+void IMUPos () {
+  angle = (rot_x + 2 * 3.14159) / 3.14159; //reads the imu value in the pitch direction
+  if ((10.0 < rot_x) && (rot_x < 40.0)) {
+    pos = 1;
+  }
+  else if ((75.0 < rot_x) && (rot_x < 90.0)) {
+    pos = 2;
+  }
+  else if ((105.0 < rot_x) && (rot_x < 135.0)) {
+    pos = 3;
+  }
+  else if ((150.0 < rot_x) && (rot_x < 200.0)) {
+    pos = 4;
+  }
+  else if ((210.0 < rot_x) && (rot_x <235.0)) {
+    pos = 5;
+  }
+  else if ((245.0 < rot_x) && (rot_x < 290.0)) {
+    pos = 6;
+  }
+  else if ((290.0 < rot_x) && (rot_x < 300.0)) {
+    pos = 7;
+  }
+  else if ((320.0 < rot_x) && (rot_x < 360.0)) {
+    pos = 8;
+  }
+  else {
+    pos = 0;
+  }
+}
+
+void actuate()
+{
+  if (pos == 1) {
+    SimbleeForMobile.process();
+    digitalWrite(l1, HIGH);
+    SimbleeForMobile.updateColor(l1ID, RED);
+    delay(onTime);
+    digitalWrite(l1, LOW);
+    SimbleeForMobile.updateColor(l1ID, BLACK);
+    delay(offTime);
+  }
+  if (pos == 2) {
+    SimbleeForMobile.process();
+    digitalWrite(l2, HIGH);
+    SimbleeForMobile.updateColor(l2ID, RED);
+    delay(onTime);
+    digitalWrite(l2, LOW);
+    SimbleeForMobile.updateColor(l2ID, BLACK);
+    delay(offTime);
+  }
+  if (pos == 3) {
+    SimbleeForMobile.process();
+    digitalWrite(l3, HIGH);
+    SimbleeForMobile.updateColor(l3ID, RED);
+    delay(onTime);
+    digitalWrite(l3, LOW);
+    SimbleeForMobile.updateColor(l3ID, BLACK);
+    delay(offTime);
+  }
+  if (pos == 4) {
+    SimbleeForMobile.process();
+    digitalWrite(l4, HIGH);
+    SimbleeForMobile.updateColor(l4ID, RED);
+    delay(onTime);
+    digitalWrite(l4, LOW);
+    SimbleeForMobile.updateColor(l4ID, BLACK);
+    delay(offTime);
+  }
+  if (pos == 5) {
+    SimbleeForMobile.process();
+    digitalWrite(l5, HIGH);
+    SimbleeForMobile.updateColor(l5ID, RED);
+    delay(onTime);
+    digitalWrite(l5, LOW);
+    SimbleeForMobile.updateColor(l5ID, BLACK);
+    delay(offTime);
+  }
+  if (pos == 6) {
+    SimbleeForMobile.process();
+    digitalWrite(l6, HIGH);
+    SimbleeForMobile.updateColor(l6ID, RED);
+    delay(onTime);
+    digitalWrite(l6, LOW);
+    SimbleeForMobile.updateColor(l6ID, BLACK);
+    delay(offTime);
+  }
+  if (pos == 7) {
+    SimbleeForMobile.process();
+    digitalWrite(l7, HIGH);
+    SimbleeForMobile.updateColor(l7ID, RED);
+    delay(onTime);
+    digitalWrite(l7, LOW);
+    SimbleeForMobile.updateColor(l7ID, BLACK);
+    delay(offTime);
+  }
+  if (pos == 8) {
+    SimbleeForMobile.process();
+    digitalWrite(l8, HIGH);
+    SimbleeForMobile.updateColor(l8ID, RED);
+    delay(onTime);
+    digitalWrite(l8, LOW);
+    SimbleeForMobile.updateColor(l8ID, BLACK);
+    delay(offTime);
+  }
+}
 void update()
 {
-//  onTime = onTime;
-//  offTime = offTime;
-  if(eventId != offtime) SimbleeForMobile.updateValue(offtime, offTime);
-  if(eventId != ontime) SimbleeForMobile.updateValue(ontime, onTime);
-  if(eventId != cooltime) SimbleeForMobile.updateValue(cooltime, coolTime);
-  if(eventId != runtime) SimbleeForMobile.updateValue(runtime, TIME);
+  //  onTime = onTime;
+  //  offTime = offTime;
+  if (eventId != offtime) SimbleeForMobile.updateValue(offtime, offTime);
+  if (eventId != ontime) SimbleeForMobile.updateValue(ontime, onTime);
+  if (eventId != cooltime) SimbleeForMobile.updateValue(cooltime, coolTime);
+  if (eventId != runtime) SimbleeForMobile.updateValue(runtime, TIME);
 }
 
 void l1event()
 {
-      SimbleeForMobile.process();
-      digitalWrite(l1, HIGH);
-      SimbleeForMobile.updateColor(l1ID, RED);
-      SimbleeForMobile.updateColor(L1, RED);      
-      delay(onTime);
-      digitalWrite(l1, LOW);
-      SimbleeForMobile.updateColor(l1ID, BLACK);
-      SimbleeForMobile.updateColor(L1, BLACK);      
-      delay(offTime);
+  SimbleeForMobile.process();
+  digitalWrite(l1, HIGH);
+  SimbleeForMobile.updateColor(l1ID, RED);
+  SimbleeForMobile.updateColor(L1, RED);
+  delay(onTime);
+  digitalWrite(l1, LOW);
+  SimbleeForMobile.updateColor(l1ID, BLACK);
+  SimbleeForMobile.updateColor(L1, BLACK);
+  delay(offTime);
 
 }
 
 void l2event()
 {
-      SimbleeForMobile.process();
-      digitalWrite(l2, HIGH);
-      SimbleeForMobile.updateColor(l2ID, RED);
-      SimbleeForMobile.updateColor(L2, RED);      
-      delay(onTime);
-      digitalWrite(l2, LOW);
-      SimbleeForMobile.updateColor(l2ID, BLACK);
-      SimbleeForMobile.updateColor(L2, BLACK);      
-      delay(offTime);
+  SimbleeForMobile.process();
+  digitalWrite(l2, HIGH);
+  SimbleeForMobile.updateColor(l2ID, RED);
+  SimbleeForMobile.updateColor(L2, RED);
+  delay(onTime);
+  digitalWrite(l2, LOW);
+  SimbleeForMobile.updateColor(l2ID, BLACK);
+  SimbleeForMobile.updateColor(L2, BLACK);
+  delay(offTime);
 
 }
 
 void l3event()
 {
-      SimbleeForMobile.process();
-      digitalWrite(l3, HIGH);
-      SimbleeForMobile.updateColor(l3ID, RED);
-      SimbleeForMobile.updateColor(L3, RED);      
-      delay(onTime);
-      digitalWrite(l3, LOW);
-      SimbleeForMobile.updateColor(l3ID, BLACK);
-      SimbleeForMobile.updateColor(L3, BLACK);      
-      delay(offTime);
+  SimbleeForMobile.process();
+  digitalWrite(l3, HIGH);
+  SimbleeForMobile.updateColor(l3ID, RED);
+  SimbleeForMobile.updateColor(L3, RED);
+  delay(onTime);
+  digitalWrite(l3, LOW);
+  SimbleeForMobile.updateColor(l3ID, BLACK);
+  SimbleeForMobile.updateColor(L3, BLACK);
+  delay(offTime);
 
 }
 
 void l4event()
 {
-      SimbleeForMobile.process();
-      digitalWrite(l4, HIGH);
-      SimbleeForMobile.updateColor(l4ID, RED);
-      SimbleeForMobile.updateColor(L4, RED);     
-      delay(onTime);
-      digitalWrite(l4, LOW);
-      SimbleeForMobile.updateColor(l4ID, BLACK);
-      SimbleeForMobile.updateColor(L4, BLACK);      
-      delay(offTime);
+  SimbleeForMobile.process();
+  digitalWrite(l4, HIGH);
+  SimbleeForMobile.updateColor(l4ID, RED);
+  SimbleeForMobile.updateColor(L4, RED);
+  delay(onTime);
+  digitalWrite(l4, LOW);
+  SimbleeForMobile.updateColor(l4ID, BLACK);
+  SimbleeForMobile.updateColor(L4, BLACK);
+  delay(offTime);
 
 }
 
 void l5event()
 {
-      SimbleeForMobile.process();
-      digitalWrite(l5, HIGH);
-      SimbleeForMobile.updateColor(l5ID, RED);
-      SimbleeForMobile.updateColor(L5, RED);      
-      delay(onTime);
-      digitalWrite(l5, LOW);
-      SimbleeForMobile.updateColor(l5ID, BLACK);
-      SimbleeForMobile.updateColor(L5, BLACK);      
-      delay(offTime);
+  SimbleeForMobile.process();
+  digitalWrite(l5, HIGH);
+  SimbleeForMobile.updateColor(l5ID, RED);
+  SimbleeForMobile.updateColor(L5, RED);
+  delay(onTime);
+  digitalWrite(l5, LOW);
+  SimbleeForMobile.updateColor(l5ID, BLACK);
+  SimbleeForMobile.updateColor(L5, BLACK);
+  delay(offTime);
 }
 
 void l6event()
 {
-      SimbleeForMobile.process();
-      digitalWrite(l6, HIGH);
-      SimbleeForMobile.updateColor(l6ID, RED);
-      SimbleeForMobile.updateColor(L6, RED);      
-      delay(onTime);
-      digitalWrite(l6, LOW);
-      SimbleeForMobile.updateColor(l6ID, BLACK);
-      SimbleeForMobile.updateColor(L6, BLACK);      
-      delay(offTime);
+  SimbleeForMobile.process();
+  digitalWrite(l6, HIGH);
+  SimbleeForMobile.updateColor(l6ID, RED);
+  SimbleeForMobile.updateColor(L6, RED);
+  delay(onTime);
+  digitalWrite(l6, LOW);
+  SimbleeForMobile.updateColor(l6ID, BLACK);
+  SimbleeForMobile.updateColor(L6, BLACK);
+  delay(offTime);
 }
 
 void l7event()
 {
-      SimbleeForMobile.process();
-      digitalWrite(l7, HIGH);
-      SimbleeForMobile.updateColor(l7ID, RED);
-      SimbleeForMobile.updateColor(L7, RED);      
-      delay(onTime);
-      digitalWrite(l7, LOW);
-      SimbleeForMobile.updateColor(l7ID, BLACK);
-      SimbleeForMobile.updateColor(L7, BLACK);
-      delay(offTime);
+  SimbleeForMobile.process();
+  digitalWrite(l7, HIGH);
+  SimbleeForMobile.updateColor(l7ID, RED);
+  SimbleeForMobile.updateColor(L7, RED);
+  delay(onTime);
+  digitalWrite(l7, LOW);
+  SimbleeForMobile.updateColor(l7ID, BLACK);
+  SimbleeForMobile.updateColor(L7, BLACK);
+  delay(offTime);
 
 }
 
 void l8event()
 {
-      SimbleeForMobile.process();
-      digitalWrite(l8, HIGH);
-      SimbleeForMobile.updateColor(l8ID, RED);
-      SimbleeForMobile.updateColor(L8, RED);      
-      delay(onTime);
-      digitalWrite(l8, LOW);
-      SimbleeForMobile.updateColor(l8ID, BLACK);
-      SimbleeForMobile.updateColor(L8, BLACK);      
-      delay(offTime);
+  SimbleeForMobile.process();
+  digitalWrite(l8, HIGH);
+  SimbleeForMobile.updateColor(l8ID, RED);
+  SimbleeForMobile.updateColor(L8, RED);
+  delay(onTime);
+  digitalWrite(l8, LOW);
+  SimbleeForMobile.updateColor(l8ID, BLACK);
+  SimbleeForMobile.updateColor(L8, BLACK);
+  delay(offTime);
 
 }
 
@@ -790,134 +822,134 @@ void getOrientation()
   Serial.print(" Z: ");
   Serial.print(euler.z());
   Serial.println("\t\t");
-  
+
   /*
-  // Quaternion data
-  imu::Quaternion quat = bno.getQuat();
-  Serial.print("qW: ");
-  Serial.print(quat.w(), 4);
-  Serial.print(" qX: ");
-  Serial.print(quat.y(), 4);
-  Serial.print(" qY: ");
-  Serial.print(quat.x(), 4);
-  Serial.print(" qZ: ");
-  Serial.print(quat.z(), 4);
-  Serial.print("\t\t");
+    // Quaternion data
+    imu::Quaternion quat = bno.getQuat();
+    Serial.print("qW: ");
+    Serial.print(quat.w(), 4);
+    Serial.print(" qX: ");
+    Serial.print(quat.y(), 4);
+    Serial.print(" qY: ");
+    Serial.print(quat.x(), 4);
+    Serial.print(" qZ: ");
+    Serial.print(quat.z(), 4);
+    Serial.print("\t\t");
   */
 
   /* Display calibration status for each sensor. */
-//  uint8_t system, gyro, accel, mag = 0;
-//  bno.getCalibration(&system, &gyro, &accel, &mag);
-//  Serial.print("CALIBRATION: Sys=");
-//  Serial.print(system, DEC);
-//  Serial.print(" Gyro=");
-//  Serial.print(gyro, DEC);
-//  Serial.print(" Accel=");
-//  Serial.print(accel, DEC);
-//  Serial.print(" Mag=");
-//  Serial.println(mag, DEC);
+  //  uint8_t system, gyro, accel, mag = 0;
+  //  bno.getCalibration(&system, &gyro, &accel, &mag);
+  //  Serial.print("CALIBRATION: Sys=");
+  //  Serial.print(system, DEC);
+  //  Serial.print(" Gyro=");
+  //  Serial.print(gyro, DEC);
+  //  Serial.print(" Accel=");
+  //  Serial.print(accel, DEC);
+  //  Serial.print(" Mag=");
+  //  Serial.println(mag, DEC);
 
   rot_x = euler.x();
   rot_y = euler.y();
   rot_z = euler.z();
-  if (SimbleeForMobile.updatable){
-        SimbleeForMobile.updateValue(text_x, rot_x);
-        SimbleeForMobile.updateValue(text_y, rot_y);
-        SimbleeForMobile.updateValue(text_z, rot_z);
-      }
-    
+  if (SimbleeForMobile.updatable) {
+    SimbleeForMobile.updateValue(text_x, rot_x);
+    SimbleeForMobile.updateValue(text_y, rot_y);
+    SimbleeForMobile.updateValue(text_z, rot_z);
+  }
+
   SimbleeForMobile.process();
-  
+
   delay(BNO055_SAMPLERATE_DELAY_MS);
 }
 
-void ui_event(event_t &event){
-  if (event.id == Switch){
+void ui_event(event_t &event) {
+  if (event.id == Switch) {
     if (event.value == 1)
       start = 1;
     else if (event.value == 0)
       start = 0;
   }
-  if (event.id == Wave_F){
+  if (event.id == Wave_F) {
     if (event.value == 1)
       wave_F = 1;
     else if (event.value == 0)
       wave_F = 0;
   }
-  if (event.id == Wave_B){
+  if (event.id == Wave_B) {
     if (event.value == 1)
       wave_B = 1;
     else if (event.value == 0)
       wave_B = 0;
   }
-  SimbleeForMobile.setEvents(L1, EVENT_PRESS|EVENT_RELEASE);
-   if(event.id == L1){
+  SimbleeForMobile.setEvents(L1, EVENT_PRESS | EVENT_RELEASE);
+  if (event.id == L1) {
     if (event.type == EVENT_PRESS)
       IL1 = 1;
     else if (event.type == EVENT_RELEASE)
       IL1 = 0;
-   }
-   SimbleeForMobile.setEvents(L2, EVENT_PRESS|EVENT_RELEASE);
-   if(event.id == L2){
+  }
+  SimbleeForMobile.setEvents(L2, EVENT_PRESS | EVENT_RELEASE);
+  if (event.id == L2) {
     if (event.type == EVENT_PRESS)
       IL2 = 1;
     else if (event.type == EVENT_RELEASE)
       IL2 = 0;
-   }
-   SimbleeForMobile.setEvents(L3, EVENT_PRESS|EVENT_RELEASE);
-   if(event.id == L3){
+  }
+  SimbleeForMobile.setEvents(L3, EVENT_PRESS | EVENT_RELEASE);
+  if (event.id == L3) {
     if (event.type == EVENT_PRESS)
       IL3 = 1;
     else if (event.type == EVENT_RELEASE)
       IL3 = 0;
-   }
-   SimbleeForMobile.setEvents(L4, EVENT_PRESS|EVENT_RELEASE);
-   if(event.id == L4){
+  }
+  SimbleeForMobile.setEvents(L4, EVENT_PRESS | EVENT_RELEASE);
+  if (event.id == L4) {
     if (event.type == EVENT_PRESS)
       IL4 = 1;
     else if (event.type == EVENT_RELEASE)
       IL4 = 0;
-   }
-   SimbleeForMobile.setEvents(L5, EVENT_PRESS|EVENT_RELEASE);
-   if(event.id == L5){
+  }
+  SimbleeForMobile.setEvents(L5, EVENT_PRESS | EVENT_RELEASE);
+  if (event.id == L5) {
     if (event.type == EVENT_PRESS)
       IL5 = 1;
     else if (event.type == EVENT_RELEASE)
       IL5 = 0;
-   }
-   SimbleeForMobile.setEvents(L6, EVENT_PRESS|EVENT_RELEASE);
-   if(event.id == L6){
+  }
+  SimbleeForMobile.setEvents(L6, EVENT_PRESS | EVENT_RELEASE);
+  if (event.id == L6) {
     if (event.type == EVENT_PRESS)
       IL6 = 1;
     else if (event.type == EVENT_RELEASE)
       IL6 = 0;
-   }
-   SimbleeForMobile.setEvents(L7, EVENT_PRESS|EVENT_RELEASE);
-   if(event.id == L7){
+  }
+  SimbleeForMobile.setEvents(L7, EVENT_PRESS | EVENT_RELEASE);
+  if (event.id == L7) {
     if (event.type == EVENT_PRESS)
       IL7 = 1;
     else if (event.type == EVENT_RELEASE)
       IL7 = 0;
-   }
-   SimbleeForMobile.setEvents(L8, EVENT_PRESS|EVENT_RELEASE);
-   if(event.id == L8){
+  }
+  SimbleeForMobile.setEvents(L8, EVENT_PRESS | EVENT_RELEASE);
+  if (event.id == L8) {
     if (event.type == EVENT_PRESS)
       IL8 = 1;
     else if (event.type == EVENT_RELEASE)
       IL8 = 0;
-   }
-  if (event.id == offtime){
+  }
+  if (event.id == offtime) {
     offTime = event.value;
-  }  
-  if (event.id == ontime){
+  }
+  if (event.id == ontime) {
     onTime = event.value;
-  }  
-  if (event.id == cooltime){
+  }
+  if (event.id == cooltime) {
     coolTime = event.value;
-  }  
-  if (event.id == runtime){
+  }
+  if (event.id == runtime) {
     TIME = event.value;
-  }  
+  }
 
   needsUpdate = true;
 }
